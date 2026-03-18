@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeafLink - Conectando Surdos e Empresas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 300px;
+            display: flex;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.9);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-buttons a, .btn {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s;
+            background: transparent;
+        }
+
+        .nav-buttons a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-login {
+            background: white;
+            color: #0077b6;
+            font-weight: bold;
+        }
+
+        .btn-login:hover {
+            background: #f0f0f0;
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        /* SIDEBAR ESQUERDA */
+        .sidebar-left {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .profile-card {
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        .profile-pic {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0077b6, #00b4d8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin: 0 auto 10px;
+        }
+
+        .profile-card h3 {
+            margin: 10px 0 5px;
+            font-size: 16px;
+        }
+
+        .profile-card p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .stats div {
+            text-align: center;
+        }
+
+        .stats-number {
+            font-weight: bold;
+            color: #0077b6;
+            font-size: 16px;
+        }
+
+        /* FEED CENTRAL */
+        .main-feed {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .create-post {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .post-input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .post-input-group input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .post-input-group input:focus {
+            outline: none;
+            background: white;
+            border-color: #0077b6;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 20px;
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            justify-content: space-around;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .post-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        .post-actions button:hover {
+            background: #f0f0f0;
+            color: #0077b6;
+        }
+
+        /* POSTS */
+        .post {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px;
+            transition: 0.2s;
+        }
+
+        .post:hover {
+            background: #f9f9f9;
+        }
+
+        .post-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .post-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0077b6, #00b4d8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .post-info {
+            flex: 1;
+        }
+
+        .post-info h4 {
+            margin-bottom: 3px;
+            font-size: 14px;
+        }
+
+        .post-info p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .post-content {
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .post-engagement {
+            display: flex;
+            gap: 15px;
+            padding-top: 12px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .post-engagement button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        .post-engagement button:hover {
+            background: #f0f0f0;
+            color: #0077b6;
+        }
+
+        /* SIDEBAR DIREITA */
+        .sidebar-right {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .sidebar-right h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .companies-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .company-item {
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .company-item:hover {
+            background: #e8f4f8;
+            border-left-color: #0077b6;
+        }
+
+        .company-item h4 {
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .company-item p {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* RESPONSIVO */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-left,
+            .sidebar-right {
+                display: none;
+            }
+
+            .search-bar {
+                display: none;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                👂 DeafLink
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Buscar profissionais, empresas...">
+            </div>
+            <div class="nav-buttons">
+                <a href="#home">Início</a>
+                <a href="#jobs">Oportunidades</a>
+                <a href="#network">Rede</a>
+                <button class="btn btn-login">Entrar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+        <!-- SIDEBAR ESQUERDA - PERFIL -->
+        <aside class="sidebar-left">
+            <div class="profile-card">
+                <div class="profile-pic">👤</div>
+                <h3>João Silva</h3>
+                <p>Designer UX/UI • São Paulo, SP</p>
+                <button class="btn" style="background: #0077b6; color: white; width: 100%;">Ver Perfil</button>
+            </div>
+            <div class="stats">
+                <div>
+                    <div class="stats-number">245</div>
+                    <div>Conexões</div>
+                </div>
+                <div>
+                    <div class="stats-number">12</div>
+                    <div>Recomendações</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- FEED CENTRAL -->
+        <main class="main-feed">
+            <!-- CREATE POST -->
+            <div class="create-post">
+                <div class="post-input-group">
+                    <div class="profile-pic" style="width: 40px; height: 40px;">👤</div>
+                    <input type="text" placeholder="Compartilhe uma oportunidade ou seu conhecimento...">
+                </div>
+                <div class="post-actions">
+                    <button>📷 Mídia</button>
+                    <button>📅 Evento</button>
+                    <button>💼 Vaga</button>
+                </div>
+            </div>
+
+            <!-- POSTS -->
+            <article class="post">
+                <div class="post-header">
+                    <div class="post-avatar">🏢</div>
+                    <div class="post-info">
+                        <h4>TechCorp Brasil</h4>
+                        <p>2 horas atrás</p>
+                    </div>
+                </div>
+                <div class="post-content">
+                    🎯 Estamos contratando! Procuramos desenvolvedores surdos para nossa equipe de TI. Salário competitivo + benefícios inclusivos. Interessados, enviem CV! #Inclusão #Tecnologia
+                </div>
+                <div class="post-engagement">
+                    <button>👍 Gostei (45)</button>
+                    <button>💬 Comentar (8)</button>
+                    <button>➡️ Compartilhar</button>
+                </div>
+            </article>
+
+            <article class="post">
+                <div class="post-header">
+                    <div class="post-avatar">👨</div>
+                    <div class="post-info">
+                        <h4>Maria Santos</h4>
+                        <p>Analista de Sistemas • RJ</p>
+                        <p>4 horas atrás</p>
+                    </div>
+                </div>
+                <div class="post-content">
+                    Feliz em anunciar que fui promovida a Líder Técnica! Agradeço à minha equipe pelo apoio e inclusão. A acessibilidade no trabalho fez toda diferença! 🙌
+                </div>
+                <div class="post-engagement">
+                    <button>👍 Gostei (120)</button>
+                    <button>💬 Comentar (25)</button>
+                    <button>➡️ Compartilhar</button>
+                </div>
+            </article>
+
+            <article class="post">
+                <div class="post-header">
+                    <div class="post-avatar">👩</div>
+                    <div class="post-info">
+                        <h4>Carlos Oliveira</h4>
+                        <p>Especialista em Acessibilidade</p>
+                        <p>1 dia atrás</p>
+                    </div>
+                </div>
+                <div class="post-content">
+                    Dica importante: Ao recrutar, verificar se a empresa tem intérprete de Libras é essencial para acessibilidade no dia a dia! 💡
+                </div>
+                <div class="post-engagement">
+                    <button>👍 Gostei (230)</button>
+                    <button>💬 Comentar (45)</button>
+                    <button>➡️ Compartilhar</button>
+                </div>
+            </article>
+        </main>
+
+        <!-- SIDEBAR DIREITA - EMPRESAS -->
+        <aside class="sidebar-right">
+            <h3>🏢 Empresas Inclusivas</h3>
+            <div class="companies-list">
+                <div class="company-item">
+                    <h4>TechCorp Brasil</h4>
+                    <p>📍 Recrutando • 150+ funcionários</p>
+                </div>
+                <div class="company-item">
+                    <h4>SoftDev Solutions</h4>
+                    <p>📍 Enviando propostas • 80+ funcionários</p>
+                </div>
+                <div class="company-item">
+                    <h4>Design Acessível Co.</h4>
+                    <p>📍 Recrutando • 45+ funcionários</p>
+                </div>
+                <div class="company-item">
+                    <h4>Inovação Social Ltda</h4>
+                    <p>📍 Atualmente contratando • 200+ funcionários</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Interatividade básica
+        document.querySelectorAll('.post-engagement button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('Obrigado pela interação!');
+            });
+        });
+
+        document.querySelectorAll('.post-actions button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('Funcionalidade em desenvolvimento!');
+            });
+        });
+
+        document.querySelector('.search-bar input')?.addEventListener('focus', function() {
+            this.placeholder = 'Digite o que procura...';
+        });
+
+        document.querySelector('.search-bar input')?.addEventListener('blur', function() {
+            this.placeholder = 'Buscar profissionais, empresas...';
+        });
+    </script>
+</body>
+</html>
