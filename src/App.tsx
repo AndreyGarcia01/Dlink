@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import Login from "./componentes/Login";
+import CriarConta from "./componentes/CriarConta";
+import Dashboard from "./componentes/Dashboard";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+type View = "login" | "signup" | "dashboard";
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function nameFromEmail(email: string) {
+  return email.split("@")[0] || "usuário";
 }
 
-export default App
+function App() {
+  const [view, setView] = useState<View>("login");
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+
+  const handleLogin = (email: string) => {
+    setUserEmail(email);
+    setUserName(nameFromEmail(email));
+    setView("dashboard");
+  };
+
+  const handleSignup = (name: string, email: string) => {
+    setUserName(name || nameFromEmail(email));
+    setUserEmail(email);
+    setView("dashboard");
+  };
+
+  const handleLogout = () => {
+    setView("login");
+  };
+
+  if (view === "signup") {
+    return (
+      <CriarConta
+        onCreated={handleSignup}
+        onBackToLogin={() => setView("login")}
+      />
+    );
+  }
+
+  if (view === "login") {
+    return (
+      <Login onLogin={handleLogin} onCreateAccount={() => setView("signup")} />
+    );
+  }
+
+  return (
+    <Dashboard
+      userName={userName}
+      userEmail={userEmail}
+      onLogout={handleLogout}
+    />
+  );
+}
+
+export default App;
