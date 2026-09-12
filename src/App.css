@@ -1023,3 +1023,132 @@ header {
 .save-btn:hover {
   background: var(--primary-dark);
 }
+
+/* ===================== PAINEL DA EMPRESA ===================== */
+.painel-page h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.painel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.painel-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+.btn-small {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13.5px;
+}
+
+.vaga-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.vaga-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.vaga-info {
+  flex: 1;
+  min-width: 220px;
+}
+.vaga-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.vaga-title-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: inherit;
+  padding: 0;
+  text-align: left;
+}
+.vaga-title-btn:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.status-badge.active {
+  background: #e4f7ec;
+  color: #1e8a4c;
+}
+.status-badge.closed {
+  background: #f1f1f1;
+  color: #777;
+}
+
+.vaga-tags {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.job-tag {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.vaga-meta {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.vaga-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 150px;
+}
+
+@media (max-width: 640px) {
+  .painel-header {
+    flex-direction: column;
+  }
+  .vaga-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .vaga-actions {
+    flex-direction: row;
+  }
+  .vaga-actions button {
+    flex: 1;
+  }
+}
