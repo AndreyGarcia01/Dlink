@@ -1,17 +1,25 @@
 import { useState } from "react";
 import Perfil from "./Perfil";
+import PainelEmpresa from "./PainelEmpresa";
 
 interface DashboardProps {
   userName: string;
   userEmail: string;
+  accountType: "candidato" | "empresa";
   onLogout: () => void;
 }
 
 type Page = "inicio" | "candidaturas" | "perfil";
 
-function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
+function Dashboard({
+  userName,
+  userEmail,
+  accountType,
+  onLogout,
+}: DashboardProps) {
   const [page, setPage] = useState<Page>("inicio");
   const initial = userName.charAt(0).toUpperCase();
+  const isEmpresa = accountType === "empresa";
 
   return (
     <div className="dashboard-layout">
@@ -40,28 +48,48 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
               <path d="M3 9.5 12 3l9 6.5" />
               <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
             </svg>
-            Início
+            {isEmpresa ? "Painel" : "Início"}
           </button>
+
           <button
             type="button"
             className={`nav-item${page === "candidaturas" ? " active" : ""}`}
             onClick={() => setPage("candidaturas")}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="2" y="7" width="20" height="14" rx="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-            Candidaturas
+            {isEmpresa ? (
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            ) : (
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="2" y="7" width="20" height="14" rx="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+              </svg>
+            )}
+            {isEmpresa ? "Candidatos" : "Candidaturas"}
           </button>
+
           <button
             type="button"
             className={`nav-item${page === "perfil" ? " active" : ""}`}
@@ -113,7 +141,11 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
       </aside>
 
       <main className="dashboard-main">
-        {page === "inicio" && (
+        {page === "inicio" && isEmpresa && (
+          <PainelEmpresa nomeEmpresa={userName} />
+        )}
+
+        {page === "inicio" && !isEmpresa && (
           <>
             <h1>Bem-vindo, {userName}!</h1>
             <p className="dashboard-subtitle">
@@ -186,7 +218,7 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
           </>
         )}
 
-        {page === "candidaturas" && (
+        {page === "candidaturas" && !isEmpresa && (
           <>
             <h1>Candidaturas</h1>
             <p className="dashboard-subtitle">
@@ -210,6 +242,34 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
               </div>
               <h3>Nenhuma candidatura ainda</h3>
               <p>Quando você se candidatar a uma vaga, ela aparecerá aqui.</p>
+            </div>
+          </>
+        )}
+
+        {page === "candidaturas" && isEmpresa && (
+          <>
+            <h1>Candidatos</h1>
+            <p className="dashboard-subtitle">
+              Pessoas que se candidataram às suas vagas
+            </p>
+            <div className="empty-state">
+              <div className="empty-icon">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                </svg>
+              </div>
+              <h3>Nenhum candidato ainda</h3>
+              <p>Quando alguém se candidatar às suas vagas, aparecerá aqui.</p>
             </div>
           </>
         )}
