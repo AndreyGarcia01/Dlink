@@ -10,6 +10,7 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -62,17 +63,27 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
           <div className={`field${passwordError ? " invalid" : ""}`}>
             <label htmlFor="password">Senha</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Sua senha"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (passwordError) setPasswordError(false);
-              }}
-            />
+            <div className="password-wrap">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                placeholder="Sua senha"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError(false);
+                }}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                👁
+              </button>
+            </div>
             <div className="field-error">Digite sua senha.</div>
           </div>
 
