@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 function Perfil() {
   const [nome, setNome] = useState("");
@@ -7,8 +7,6 @@ function Perfil() {
   const [resumo, setResumo] = useState("");
   const [novaHabilidade, setNovaHabilidade] = useState("");
   const [habilidades, setHabilidades] = useState<string[]>([]);
-  const [videoNome, setVideoNome] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initial = nome.charAt(0).toUpperCase() || "U";
 
@@ -21,11 +19,6 @@ function Perfil() {
 
   const removerHabilidade = (index: number) => {
     setHabilidades((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setVideoNome(file ? file.name : null);
   };
 
   return (
@@ -158,30 +151,6 @@ function Perfil() {
           </button>
         </div>
         <p className="perfil-empty-hint">Nenhuma formação adicionada ainda.</p>
-      </div>
-
-      <div className="perfil-card">
-        <h3>
-          <span className="video-icon" aria-hidden="true">
-            ▶
-          </span>{" "}
-          Vídeo de apresentação em Libras
-        </h3>
-        <p className="perfil-hint">Máx. 50MB — .mp4, .mov, .webm</p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="video/mp4,video/quicktime,video/webm"
-          onChange={handleVideoChange}
-          style={{ display: "none" }}
-        />
-        <button
-          type="button"
-          className="upload-btn"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          ▶ {videoNome ? videoNome : "Enviar vídeo de apresentação"}
-        </button>
       </div>
 
       <button type="button" className="save-btn">
