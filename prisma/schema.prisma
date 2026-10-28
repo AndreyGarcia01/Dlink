@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  candidate
+  company
+}
+
+// Usuários (Candidatos e Empresas)
+model User {
+  id                      String   @id @default(uuid())
+  name                    String   @db.VarChar(150)
+  email                   String   @unique @db.VarChar(150)
+  passwordHash            String   @map("password_hash") @db.VarChar(255)
+  role                    Role
+  
+  // Campos exclusivos de candidato
+  hearingLossLevel        String?  @map("hearing_loss_level") @db.VarChar(50)
+  communicationPreference String?  @map("communication_preference") @db.VarChar(50)
+  
+  // Campos exclusivos de empresa
+  cnpj                    String?  @db.VarChar(20)
+  companyDescription      String?  @map("company_description") @db.Text
+  sector                  String?  @db.VarChar(100)
+
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  candidateProfile        CandidateProfile?
+  jobs                    Job[]
+  applications            Application[]
+  notifications           Notification[]
+
+  @@map("users")
+}
+
+// Perfil profissional do candidato
+model CandidateProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique @map("user_id")
+  bio        String?  @db.Text
+  experience String?  @db.Text
+  education  String?  @db.Text
+  skills     String?  @db.Text
+  videoUrl   String?  @map("video_url") @db.VarChar(500)
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_profiles")
+}
+
+// Vagas publicadas pelas empresas
+model Job {
+  id           String   @id @default(uuid())
+  companyId    String   @map("company_id")
+  title        String   @db.VarChar(150)
+  description  String   @db.Text
+  requirements String   @db.Text
+  location     String   @db.VarChar(150)
+  workRegion   String   @map("work_region") @db.VarChar(50)
+  category     String?  @db.VarChar(100)
+  status       String   @default("active") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  company      User     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  accessibilities JobAccessibility[]
+  applications Application[]
+
+  @@map("jobs")
+}
+
+// Recursos de acessibilidade por vaga
+model JobAccessibility {
+  id       String   @id @default(uuid())
+  jobId    String   @map("job_id")
+  resource String   @db.VarChar(100)
+  status   String   @default("available") @db.VarChar(20)
+
+  job      Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_accessibility")
+}
+
+// Candidaturas
+model Application {
+  id          String   @id @default(uuid())
+  candidateId String   @map("candidate_id")
+  jobId       String   @map("job_id")
+  status      String   @default("pending") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, jobId]) 
+  @@map("applications")
+}
+
+// Notificações
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  referenceId String?  @map("reference_id") @db.VarChar(36)
+  message     String   @db.Text
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// Conteúdos sobre direitos trabalhistas
+model ContentArticle {
+  id         String   @id @default(uuid())
+  title      String   @db.VarChar(200)
+  body       String?  @db.Text
+  videoUrl   String?  @map("video_url") @db.VarChar(500)
+  transcript String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("content_articles")
+}
