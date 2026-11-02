@@ -3,7 +3,7 @@ import axios from "axios";
 import { api } from "../services/api"; // Importando a conexão com o backend
 
 interface LoginProps {
-  onLogin: (email: string) => void;
+  onLogin: (email: string, role: string) => void; // <-- MUDANÇA 1: Adicionado o role aqui
   onCreateAccount: () => void;
 }
 
@@ -45,7 +45,7 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
       localStorage.setItem("@DLink:user", JSON.stringify(user));
 
       // Avisa o componente pai que o login deu certo
-      onLogin(email.trim());
+      onLogin(email.trim(), user.role); // <-- MUDANÇA 2: Passando o role para o App.tsx
     } catch (error) {
       // Se o backend retornar erro (ex: senha inválida), mostra a mensagem dele.
       // O "error" vem como "unknown"; o isAxiosError confirma que é um erro do axios.

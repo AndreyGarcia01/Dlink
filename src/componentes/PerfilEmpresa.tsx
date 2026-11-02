@@ -1,14 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "../services/api";
 
-interface PerfilEmpresaProps {
-  nomeEmpresa: string;
-}
-
-function PerfilEmpresa({ nomeEmpresa }: PerfilEmpresaProps) {
-  const [razaoSocial, setRazaoSocial] = useState(nomeEmpresa);
+function PerfilEmpresa() {
+  const [razaoSocial, setRazaoSocial] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [setor, setSetor] = useState("");
   const [descricao, setDescricao] = useState("");
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Busca os dados do banco assim que a tela abre
+  useEffect(() => {
+    async function carregarPerfil() {
+      try {
+        const response = await api.get("/profile/me");
+        const data = response.data;
+
+        setRazaoSocial(data.name || "");
+        setCnpj(data.cnpj || "");
+        setSetor(data.sector || "");
+        setDescricao(data.companyDescription || "");
+      } catch (error) {
+        console.error("Erro ao carregar perfil da empresa", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    carregarPerfil();
+  }, []);
+
+  // Salva as alterações no banco
+  const salvarAlteracoes = async () => {
+    setIsSaving(true);
+    try {
+      await api.put("/profile/me", {
+        name: razaoSocial,
+        cnpj: cnpj,
+        sector: setor,
+        companyDescription: descricao,
+      });
+      alert("Perfil da empresa salvo com sucesso!");
+    } catch {
+      // <-- OLHA AQUI: Sem o (error)
+      alert("Erro ao salvar o perfil da empresa.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        Carregando perfil...
+      </div>
+    );
+  }
 
   return (
     <div className="perfil-page">
@@ -93,8 +140,13 @@ function PerfilEmpresa({ nomeEmpresa }: PerfilEmpresaProps) {
         </div>
       </div>
 
-      <button type="button" className="save-btn">
-        Salvar alterações
+      <button
+        type="button"
+        className="save-btn"
+        onClick={salvarAlteracoes}
+        disabled={isSaving}
+      >
+        {isSaving ? "Salvando..." : "Salvar alterações"}
       </button>
     </div>
   );
