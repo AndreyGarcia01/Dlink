@@ -91,12 +91,13 @@ model JobAccessibility {
 
 // Candidaturas
 model Application {
-  id          String   @id @default(uuid())
-  candidateId String   @map("candidate_id")
-  jobId       String   @map("job_id")
-  status      String   @default("pending") @db.VarChar(20)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  candidateId         String   @map("candidate_id")
+  jobId               String   @map("job_id")
+  status              String   @default("pending") @db.VarChar(20) 
+  requiresInterpreter Boolean  @default(false) @map("requires_interpreter") // <-- NOVA LINHA
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)

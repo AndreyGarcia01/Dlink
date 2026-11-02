@@ -90,19 +90,17 @@ router.post(
   },
 );
 
-// ==========================================
 // CANDIDATAR-SE A UMA VAGA (RF17)
-// ==========================================
 router.post(
   "/:id/apply",
   ensureAuthenticated,
   async (req: AuthRequest, res: Response) => {
     try {
-      // Forçando o TS a entender que o ID é uma string
       const jobId = String(req.params.id);
-
-      // Como o ensureAuthenticated já rodou, sabemos que o user existe. O "!" garante isso pro TS.
       const candidateId = req.user!.id;
+
+      // Recebe se precisa de intérprete
+      const { requiresInterpreter } = req.body;
 
       if (req.user?.role !== "candidate") {
         return res
@@ -110,11 +108,8 @@ router.post(
           .json({ error: "Apenas candidatos podem se candidatar." });
       }
 
-      // Verifica se já se candidatou (RN04)
       const existingApplication = await prisma.application.findUnique({
-        where: {
-          candidateId_jobId: { candidateId: candidateId, jobId },
-        },
+        where: { candidateId_jobId: { candidateId: candidateId, jobId } },
       });
 
       if (existingApplication) {
@@ -123,12 +118,12 @@ router.post(
           .json({ error: "Você já se candidatou a esta vaga." });
       }
 
-      // Cria a candidatura
       const application = await prisma.application.create({
         data: {
           candidateId: candidateId,
           jobId: jobId,
-          status: "pending", // Status inicial
+          requiresInterpreter: requiresInterpreter || false, // <-- Salva a escolha
+          status: "pending",
         },
       });
 
@@ -141,6 +136,7 @@ router.post(
     }
   },
 );
+
 // ==========================================
 // LISTAR VAGAS DA EMPRESA LOGADA
 // ==========================================
@@ -202,6 +198,52 @@ router.get(
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: "Erro ao buscar candidatos." });
+    }
+  },
+);
+
+// ==========================================
+// ENCERRAR VAGA (RN08)
+// ==========================================
+router.patch(
+  "/:id/close",
+  ensureAuthenticated,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const jobId = String(req.params.id);
+      const companyId = req.user?.id;
+
+      if (req.user?.role !== "company") {
+        return res
+          .status(403)
+          .json({ error: "Apenas empresas podem encerrar vagas." });
+      }
+
+      // Verifica se a vaga existe e pertence à empresa logada
+      const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+      if (!job) {
+        return res.status(404).json({ error: "Vaga não encontrada." });
+      }
+      if (job.companyId !== companyId) {
+        return res
+          .status(403)
+          .json({ error: "Você não tem permissão para encerrar esta vaga." });
+      }
+
+      // Atualiza o status para 'closed'
+      const updatedJob = await prisma.job.update({
+        where: { id: jobId },
+        data: { status: "closed" },
+      });
+
+      return res.json({
+        message: "Vaga encerrada com sucesso!",
+        job: updatedJob,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Erro ao encerrar vaga." });
     }
   },
 );

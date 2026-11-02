@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import axios from "axios";
-import PerfilEmpresa from "./PerfilEmpresa"; // <-- 1. Importação do Perfil
+import PerfilEmpresa from "./PerfilEmpresa";
 
 interface PainelEmpresaProps {
   onLogout: () => void;
@@ -19,6 +19,7 @@ interface Job {
 interface Application {
   id: string;
   status: "pending" | "approved" | "rejected";
+  requiresInterpreter: boolean;
   candidate: {
     name: string;
     email: string;
@@ -28,7 +29,6 @@ interface Application {
 }
 
 function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
-  // <-- 2. Adicionado o "perfil" nas opções de aba
   const [activeTab, setActiveTab] = useState<
     "vagas" | "criar" | "candidatos" | "perfil"
   >("vagas");
@@ -119,6 +119,30 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
     }
   };
 
+  const encerrarVaga = async (jobId: string) => {
+    if (
+      !window.confirm(
+        "Tem certeza que deseja encerrar esta vaga? Ela não aparecerá mais para os candidatos.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.patch(`/jobs/${jobId}/close`);
+
+      setJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId ? { ...job, status: "closed" } : job,
+        ),
+      );
+
+      alert("Vaga encerrada com sucesso!");
+    } catch {
+      alert("Erro ao encerrar a vaga.");
+    }
+  };
+
   return (
     <div className="dashboard-layout">
       <aside className="dashboard-sidebar">
@@ -140,8 +164,6 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           >
             Publicar Nova Vaga
           </button>
-
-          {/* 3. Novo Botão de Perfil no Menu Lateral */}
           <button
             className={`nav-item ${activeTab === "perfil" ? "active" : ""}`}
             onClick={() => setActiveTab("perfil")}
@@ -182,19 +204,65 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         📍 {job.location} • 💼 {job.workRegion}
                       </p>
                     </div>
-                    <div className="job-footer" style={{ marginTop: "16px" }}>
-                      <span>👥 {job._count.applications} candidato(s)</span>
-                      <button
-                        className="btn-apply"
+
+                    {/* FOOTER DO CARD COM OS BOTÕES ALINHADOS */}
+                    {/* FOOTER DO CARD COM OS BOTÕES RESPONSIVOS */}
+                    <div
+                      className="job-footer"
+                      style={{
+                        marginTop: "16px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                      }}
+                    >
+                      {/* Contagem de candidatos no topo */}
+                      <span
                         style={{
-                          width: "auto",
-                          marginTop: 0,
-                          padding: "8px 16px",
+                          fontSize: "14px",
+                          color: "#666",
+                          fontWeight: "500",
                         }}
-                        onClick={() => verCandidatos(job.id, job.title)}
                       >
-                        Ver Candidatos
-                      </button>
+                        👥 {job._count.applications} candidato(s)
+                      </span>
+
+                      {/* Botões embaixo, dividindo o espaço */}
+                      <div
+                        style={{ display: "flex", gap: "8px", width: "100%" }}
+                      >
+                        <button
+                          className="btn-apply"
+                          style={{
+                            flex: 1,
+                            marginTop: 0,
+                            padding: "8px",
+                            fontSize: "13px",
+                            whiteSpace: "nowrap",
+                          }}
+                          onClick={() => verCandidatos(job.id, job.title)}
+                        >
+                          Ver Candidatos
+                        </button>
+
+                        {job.status === "active" && (
+                          <button
+                            className="btn-secondary"
+                            style={{
+                              flex: 1,
+                              marginTop: 0,
+                              padding: "8px",
+                              fontSize: "13px",
+                              color: "#d32f2f",
+                              borderColor: "#d32f2f",
+                              whiteSpace: "nowrap",
+                            }}
+                            onClick={() => encerrarVaga(job.id)}
+                          >
+                            Encerrar
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -304,8 +372,31 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         {candidate.candidate.communicationPreference ||
                           "Não informada"}
                       </p>
-                    </div>
 
+                      {/* AQUI ENTRA O ALERTA LARANJA */}
+                      {candidate.requiresInterpreter && (
+                        <div
+                          style={{
+                            marginTop: "12px",
+                            padding: "10px",
+                            background: "#fff3e0",
+                            borderLeft: "4px solid #ef6c00",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: "13px",
+                              color: "#ef6c00",
+                              fontWeight: "bold",
+                              margin: 0,
+                            }}
+                          >
+                            ⚠️ Necessita de intérprete de Libras
+                          </p>
+                        </div>
+                      )}
+                    </div>
                     <div
                       style={{
                         marginTop: "20px",
@@ -352,7 +443,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           </div>
         )}
 
-        {/* 4. RENDERIZAÇÃO DA ABA DE PERFIL DA EMPRESA */}
+        {/* ABA DE PERFIL DA EMPRESA */}
         {activeTab === "perfil" && <PerfilEmpresa />}
       </main>
     </div>
