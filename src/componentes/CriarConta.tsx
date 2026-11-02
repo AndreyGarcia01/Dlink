@@ -1,19 +1,81 @@
 import { useState, FormEvent } from "react";
+import axios from "axios";
+import { api } from "../services/api";
 
 interface CriarContaProps {
-  onCreated: (name: string, email: string) => void;
+  // Mudança 1: O role agora é obrigatório para avisar o App.tsx
+  onCreated: (name: string, email: string, role: string) => void;
   onBackToLogin: () => void;
 }
 
 function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
   const [tipo, setTipo] = useState<"candidato" | "empresa">("candidato");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Estados para os campos
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  // Campos de candidato
+  const [perdaAuditiva, setPerdaAuditiva] = useState("Profundo");
+  const [comunicacao, setComunicacao] = useState("Libras");
+
+  // Campos de empresa
+  const [cnpj, setCnpj] = useState("");
+  const [setor, setSetor] = useState("");
+
+  // Estados para controle da API
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    onCreated(nome.trim(), email.trim());
+    setApiError("");
+
+    // Validação básica de senha
+    if (password !== confirmPassword) {
+      setApiError("As senhas não coincidem.");
+      return;
+    }
+    if (password.length < 6) {
+      setApiError("A senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Define o role baseado no tipo selecionado
+    const role = tipo === "candidato" ? "candidate" : "company";
+
+    try {
+      // Chamada real para o backend salvar no banco Neon
+      await api.post("/auth/register", {
+        name: nome.trim(),
+        email: email.trim(),
+        password,
+        role,
+        hearingLossLevel: tipo === "candidato" ? perdaAuditiva : null,
+        communicationPreference: tipo === "candidato" ? comunicacao : null,
+        cnpj: tipo === "empresa" ? cnpj : null,
+        sector: tipo === "empresa" ? setor : null,
+      });
+
+      // Se deu certo, avisa o App.tsx (passando o role para ele redirecionar)
+      onCreated(nome.trim(), email.trim(), role);
+    } catch (error) {
+      if (
+        axios.isAxiosError<{ error?: string }>(error) &&
+        error.response?.data?.error
+      ) {
+        setApiError(error.response.data.error);
+      } else {
+        setApiError("Erro ao conectar com o servidor.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -26,6 +88,20 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
 
       <div className="signup-card">
         <h2>Criar conta</h2>
+
+        {/* Mensagem de erro caso o backend recuse (ex: e-mail já em uso) */}
+        {apiError && (
+          <div
+            style={{
+              color: "red",
+              marginBottom: "15px",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            {apiError}
+          </div>
+        )}
 
         <p className="signup-label">Você é:</p>
         <div className="account-type-row">
@@ -95,6 +171,8 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
                   type={showPassword ? "text" : "password"}
                   placeholder="Mín. 6 caracteres"
                   minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
@@ -113,6 +191,8 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
                 id="confirm-password"
                 type="password"
                 placeholder="Repita a senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
             </div>
@@ -122,7 +202,11 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
             <div className="field-row">
               <div className="field">
                 <label htmlFor="perda-auditiva">Grau de perda auditiva</label>
-                <select id="perda-auditiva" defaultValue="Profundo">
+                <select
+                  id="perda-auditiva"
+                  value={perdaAuditiva}
+                  onChange={(e) => setPerdaAuditiva(e.target.value)}
+                >
                   <option>Leve</option>
                   <option>Moderada</option>
                   <option>Severa</option>
@@ -131,7 +215,11 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
               </div>
               <div className="field">
                 <label htmlFor="comunicacao">Preferência de comunicação</label>
-                <select id="comunicacao" defaultValue="Libras">
+                <select
+                  id="comunicacao"
+                  value={comunicacao}
+                  onChange={(e) => setComunicacao(e.target.value)}
+                >
                   <option>Libras</option>
                   <option>Leitura labial</option>
                   <option>Escrita</option>
@@ -143,7 +231,13 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
             <div className="field-row">
               <div className="field">
                 <label htmlFor="cnpj">CNPJ</label>
-                <input id="cnpj" type="text" placeholder="00.000.000/0001-00" />
+                <input
+                  id="cnpj"
+                  type="text"
+                  placeholder="00.000.000/0001-00"
+                  value={cnpj}
+                  onChange={(e) => setCnpj(e.target.value)}
+                />
               </div>
               <div className="field">
                 <label htmlFor="setor">Setor de atuação</label>
@@ -151,14 +245,21 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
                   id="setor"
                   type="text"
                   placeholder="Ex: Tecnologia, Varejo..."
+                  value={setor}
+                  onChange={(e) => setSetor(e.target.value)}
                 />
               </div>
             </div>
           )}
 
           <div className="btn-center-wrap">
-            <button type="submit" className="btn-primary btn-auto">
-              <span aria-hidden="true">＋</span> Criar conta gratuita
+            <button
+              type="submit"
+              className="btn-primary btn-auto"
+              disabled={isLoading}
+            >
+              <span aria-hidden="true">＋</span>{" "}
+              {isLoading ? "Criando conta..." : "Criar conta gratuita"}
             </button>
           </div>
         </form>
