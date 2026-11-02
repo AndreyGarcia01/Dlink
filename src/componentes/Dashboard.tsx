@@ -73,17 +73,22 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
   // ... o resto do seu código (handleApply, return, etc.)
 
   async function handleApply(jobId: string) {
-    try {
-      await api.post(`/jobs/${jobId}/apply`);
+    // Pergunta acessível para o candidato
+    const precisaInterprete = window.confirm(
+      "Você precisará de um intérprete de Libras na entrevista ou no primeiro contato?\n\nClique em 'OK' para SIM ou 'Cancelar' para NÃO.",
+    );
 
-      // Atualiza o estado visual (sem alert, para ser mais acessível)
+    try {
+      await api.post(`/jobs/${jobId}/apply`, {
+        requiresInterpreter: precisaInterprete, // <-- Envia para o backend
+      });
+
       setAppliedJobs((prev) => [...prev, jobId]);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.error) {
         if (
           error.response.data.error === "Você já se candidatou a esta vaga."
         ) {
-          // Se o backend disser que já se candidatou, apenas pinta o botão de verde
           setAppliedJobs((prev) => [...prev, jobId]);
         } else {
           alert(error.response.data.error);
