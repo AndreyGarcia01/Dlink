@@ -1,7 +1,11 @@
 import { useState, FormEvent } from "react";
 
 interface CriarContaProps {
-  onCreated: (name: string, email: string) => void;
+  onCreated: (
+    name: string,
+    email: string,
+    tipo: "candidato" | "empresa",
+  ) => void;
   onBackToLogin: () => void;
 }
 
@@ -13,7 +17,7 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onCreated(nome.trim(), email.trim());
+    onCreated(nome.trim(), email.trim(), tipo);
   };
 
   return (

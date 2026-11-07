@@ -6,8 +6,8 @@ interface LoginProps {
 }
 
 function Login({ onLogin, onCreateAccount }: LoginProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("teste1@gmail.com");
+  const [password, setPassword] = useState("teste123");
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
 
