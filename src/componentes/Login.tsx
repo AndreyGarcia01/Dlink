@@ -3,14 +3,15 @@ import axios from "axios";
 import { api } from "../services/api";
 
 interface LoginProps {
-  onLogin: (email: string, role: string) => void;
+  // 1. ADICIONANDO O "name" NA INTERFACE
+  onLogin: (email: string, role: string, name: string) => void;
   onCreateAccount: () => void;
 }
 
 function Login({ onLogin, onCreateAccount }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // NOVO
+  const [showPassword, setShowPassword] = useState(false);
 
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
@@ -42,7 +43,8 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
       localStorage.setItem("@DLink:token", token);
       localStorage.setItem("@DLink:user", JSON.stringify(user));
 
-      onLogin(email.trim(), user.role);
+      // 2. ENVIANDO O NOME PARA O APP.TSX
+      onLogin(email.trim(), user.role, user.name);
     } catch (error) {
       if (
         axios.isAxiosError<{ error?: string }>(error) &&
@@ -105,7 +107,6 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
           <div className={`field${passwordError ? " invalid" : ""}`}>
             <label htmlFor="password">Senha</label>
-            {/* NOVO: password-wrap para o olhinho */}
             <div className="password-wrap">
               <input
                 type={showPassword ? "text" : "password"}

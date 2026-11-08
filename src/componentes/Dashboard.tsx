@@ -243,7 +243,6 @@ function Dashboard({
           </div>
         )}
 
-        {/* CORREÇÃO AQUI: Passando a função para o Perfil */}
         {activeTab === "perfil" && <Perfil onUpdateName={onUpdateName} />}
       </main>
     </div>

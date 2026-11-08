@@ -9,13 +9,32 @@ import "./App.css";
 type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
 
 function App() {
-  const [view, setView] = useState<View>("login");
-  const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [view, setView] = useState<View>(() => {
+    const token = localStorage.getItem("@DLink:token");
+    const user = localStorage.getItem("@DLink:user");
+    if (token && user) {
+      const parsedUser = JSON.parse(user);
+      return parsedUser.role === "company"
+        ? "company_dashboard"
+        : "candidate_dashboard";
+    }
+    return "login";
+  });
 
-  const handleLogin = (email: string, role: string) => {
+  const [userName, setUserName] = useState(() => {
+    const user = localStorage.getItem("@DLink:user");
+    return user ? JSON.parse(user).name : "";
+  });
+
+  const [userEmail, setUserEmail] = useState(() => {
+    const user = localStorage.getItem("@DLink:user");
+    return user ? JSON.parse(user).email : "";
+  });
+
+  const handleLogin = (email: string, role: string, name: string) => {
     setUserEmail(email);
-    setUserName(email.split("@")[0] || "usuário");
+    setUserName(name || email.split("@")[0] || "usuário");
+
     if (role === "company") setView("company_dashboard");
     else setView("candidate_dashboard");
   };
@@ -29,11 +48,19 @@ function App() {
 
   const handleLogout = () => {
     localStorage.clear();
+    setUserName("");
+    setUserEmail("");
     setView("login");
   };
 
   const handleUpdateName = (newName: string) => {
     setUserName(newName);
+    const user = localStorage.getItem("@DLink:user");
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      parsedUser.name = newName;
+      localStorage.setItem("@DLink:user", JSON.stringify(parsedUser));
+    }
   };
 
   const renderView = () => {
