@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Login from "./componentes/Login";
 import CriarConta from "./componentes/CriarConta";
 import Dashboard from "./componentes/Dashboard";
@@ -12,6 +12,11 @@ function App() {
   const [view, setView] = useState<View>("login");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [accountType, setAccountType] = useState<AccountType>("candidato");
+
+  // Lembra o tipo de conta de cada e-mail cadastrado nesta sessão,
+  // já que ainda não há um backend real de autenticação.
+  const registro = useRef<Record<string, AccountType>>({});
 
   const handleLogin = (email: string, role: string) => {
     setUserEmail(email);

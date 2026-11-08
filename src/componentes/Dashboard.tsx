@@ -9,6 +9,7 @@ import SearchBar from "./SearchBar";
 interface DashboardProps {
   userName: string;
   userEmail: string;
+  accountType: "candidato" | "empresa";
   onLogout: () => void;
   onUpdateName: (name: string) => void;
 }
