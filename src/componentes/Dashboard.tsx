@@ -2,36 +2,23 @@ import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import Perfil from "./Perfil";
 import axios from "axios";
+import type { Job } from "../types/job";
+import type { Application } from "../types/application";
+import SearchBar from "./SearchBar";
 
 interface DashboardProps {
   userName: string;
   userEmail: string;
   onLogout: () => void;
+  onUpdateName: (name: string) => void;
 }
 
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  workRegion: string;
-  category: string;
-  company: { name: string };
-  applications?: { id: string }[];
-}
-
-// Adiciona a interface da Candidatura (FORA do componente)
-interface Application {
-  id: string;
-  status: "pending" | "approved" | "rejected";
-  job: {
-    title: string;
-    company: { name: string };
-  };
-}
-
-// AQUI COMEÇA A FUNÇÃO DO COMPONENTE
-function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
+function Dashboard({
+  userName,
+  userEmail,
+  onLogout,
+  onUpdateName,
+}: DashboardProps) {
   const initial = userName.charAt(0).toUpperCase();
   const [activeTab, setActiveTab] = useState<
     "inicio" | "candidaturas" | "perfil"
@@ -40,14 +27,11 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
-
-  // O ESTADO DA CANDIDATURA TEM QUE FICAR AQUI DENTRO!
   const [myApplications, setMyApplications] = useState<Application[]>([]);
 
   useEffect(() => {
     async function carregarDados() {
       try {
-        // Busca as vagas e as candidaturas juntas
         const [jobsRes, appsRes] = await Promise.all([
           api.get("/jobs"),
           api.get("/applications/me"),
@@ -60,7 +44,7 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
           .map((job: Job) => job.id);
         setAppliedJobs(appliedIds);
 
-        setMyApplications(appsRes.data); // <-- Usando a variável aqui!
+        setMyApplications(appsRes.data);
       } catch (error) {
         console.error("Erro ao carregar dados", error);
       } finally {
@@ -70,17 +54,14 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
     carregarDados();
   }, []);
 
-  // ... o resto do seu código (handleApply, return, etc.)
-
   async function handleApply(jobId: string) {
-    // Pergunta acessível para o candidato
     const precisaInterprete = window.confirm(
       "Você precisará de um intérprete de Libras na entrevista ou no primeiro contato?\n\nClique em 'OK' para SIM ou 'Cancelar' para NÃO.",
     );
 
     try {
       await api.post(`/jobs/${jobId}/apply`, {
-        requiresInterpreter: precisaInterprete, // <-- Envia para o backend
+        requiresInterpreter: precisaInterprete,
       });
 
       setAppliedJobs((prev) => [...prev, jobId]);
@@ -102,7 +83,6 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
   return (
     <div className="dashboard-layout">
       <aside className="dashboard-sidebar">
-        {/* ... (código da sidebar mantido igual) ... */}
         <div className="sidebar-logo">
           <div className="mini-logo">D</div>
           <span className="mini-logo-text">D-Link</span>
@@ -152,14 +132,7 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
               Encontre vagas acessíveis para você
             </p>
 
-            <div className="search-row">
-              <div className="search-box">
-                <input type="text" placeholder="Buscar vagas..." />
-              </div>
-              <button type="button" className="filters-btn">
-                Filtros
-              </button>
-            </div>
+            <SearchBar />
 
             <p className="results-count">{jobs.length} vagas encontradas</p>
 
@@ -173,7 +146,6 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
             ) : (
               <div className="jobs-grid">
                 {jobs.map((job) => {
-                  // Verifica se já se candidatou a essa vaga específica
                   const hasApplied = appliedJobs.includes(job.id);
 
                   return (
@@ -189,7 +161,6 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
                         <span>💼 {job.workRegion}</span>
                       </div>
 
-                      {/* BOTÃO INTELIGENTE E ACESSÍVEL */}
                       <button
                         className={`btn-apply ${hasApplied ? "applied" : ""}`}
                         onClick={() => !hasApplied && handleApply(job.id)}
@@ -244,8 +215,8 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
                 {myApplications.map((app) => (
                   <div key={app.id} className="job-card">
                     <div className="job-card-header">
-                      <h3>{app.job.title}</h3>
-                      <p className="job-company">{app.job.company.name}</p>
+                      <h3>{app.job?.title}</h3>
+                      <p className="job-company">{app.job?.company.name}</p>
                     </div>
 
                     <div style={{ marginTop: "16px" }}>
@@ -272,7 +243,8 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
           </div>
         )}
 
-        {activeTab === "perfil" && <Perfil />}
+        {/* CORREÇÃO AQUI: Passando a função para o Perfil */}
+        {activeTab === "perfil" && <Perfil onUpdateName={onUpdateName} />}
       </main>
     </div>
   );

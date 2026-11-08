@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
 
-function PerfilEmpresa() {
+// 1. ADICIONANDO A INTERFACE DE PROPS
+interface PerfilEmpresaProps {
+  onUpdateName?: (name: string) => void;
+}
+
+// 2. RECEBENDO A FUNÇÃO NA DESESTRUTURAÇÃO
+function PerfilEmpresa({ onUpdateName }: PerfilEmpresaProps) {
   const [razaoSocial, setRazaoSocial] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [setor, setSetor] = useState("");
@@ -9,20 +15,19 @@ function PerfilEmpresa() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
-  // Busca os dados do banco assim que a tela abre
   useEffect(() => {
     async function carregarPerfil() {
       try {
         const response = await api.get("/profile/me");
         const data = response.data;
-
         setRazaoSocial(data.name || "");
         setCnpj(data.cnpj || "");
         setSetor(data.sector || "");
         setDescricao(data.companyDescription || "");
       } catch (error) {
-        console.error("Erro ao carregar perfil da empresa", error);
+        console.error("Erro ao carregar perfil", error);
       } finally {
         setIsLoading(false);
       }
@@ -30,9 +35,9 @@ function PerfilEmpresa() {
     carregarPerfil();
   }, []);
 
-  // Salva as alterações no banco
-  const salvarAlteracoes = async () => {
+  const handleSave = async () => {
     setIsSaving(true);
+    setIsSaved(false);
     try {
       await api.put("/profile/me", {
         name: razaoSocial,
@@ -40,22 +45,28 @@ function PerfilEmpresa() {
         sector: setor,
         companyDescription: descricao,
       });
-      alert("Perfil da empresa salvo com sucesso!");
-    } catch {
-      // <-- OLHA AQUI: Sem o (error)
+
+      // 3. AVISANDO O COMPONENTE PAI (App.tsx via PainelEmpresa) QUE O NOME MUDOU
+      if (onUpdateName) onUpdateName(razaoSocial);
+
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+    } catch (error) {
+      console.error("Erro detalhado:", error);
       alert("Erro ao salvar o perfil da empresa.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (isLoading) {
+  const initial = razaoSocial.charAt(0).toUpperCase() || "E";
+
+  if (isLoading)
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
         Carregando perfil...
       </div>
     );
-  }
 
   return (
     <div className="perfil-page">
@@ -65,51 +76,24 @@ function PerfilEmpresa() {
       </p>
 
       <div className="perfil-card">
-        <h3>Informações da empresa</h3>
-
-        <div className="empresa-logo-row">
-          <div className="empresa-logo-box">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
-              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
-              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
-              <path d="M10 6h4" />
-              <path d="M10 10h4" />
-              <path d="M10 14h4" />
-              <path d="M10 18h4" />
-            </svg>
+        <h3>Informações básicas</h3>
+        <div className="perfil-basic-row">
+          <div className="perfil-avatar">{initial}</div>
+          <div className="field perfil-name-field">
+            <label>Razão Social *</label>
+            <input
+              type="text"
+              value={razaoSocial}
+              onChange={(e) => setRazaoSocial(e.target.value)}
+              placeholder="Nome da empresa"
+            />
           </div>
-          <div>
-            <div className="empresa-logo-title">Logo da empresa</div>
-            <div className="empresa-logo-hint">Upload de logo (em breve)</div>
-          </div>
-        </div>
-
-        <div className="field">
-          <label htmlFor="empresa-razao">Razão social *</label>
-          <input
-            id="empresa-razao"
-            type="text"
-            value={razaoSocial}
-            onChange={(e) => setRazaoSocial(e.target.value)}
-            placeholder="Nome da empresa"
-          />
         </div>
 
         <div className="field-row">
           <div className="field">
-            <label htmlFor="empresa-cnpj">CNPJ</label>
+            <label>CNPJ</label>
             <input
-              id="empresa-cnpj"
               type="text"
               value={cnpj}
               onChange={(e) => setCnpj(e.target.value)}
@@ -117,36 +101,38 @@ function PerfilEmpresa() {
             />
           </div>
           <div className="field">
-            <label htmlFor="empresa-setor">Setor de atuação</label>
+            <label>Setor de atuação</label>
             <input
-              id="empresa-setor"
               type="text"
               value={setor}
               onChange={(e) => setSetor(e.target.value)}
-              placeholder="Ex: Tecnologia, Varejo..."
+              placeholder="Ex: Tecnologia"
             />
           </div>
         </div>
+      </div>
 
-        <div className="field">
-          <label htmlFor="empresa-descricao">Descrição da empresa</label>
-          <textarea
-            id="empresa-descricao"
-            className="perfil-textarea"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            placeholder="Conte um pouco sobre a empresa, cultura e ações de inclusão..."
-          />
-        </div>
+      <div className="perfil-card">
+        <h3>Resumo da empresa</h3>
+        <textarea
+          className="perfil-textarea"
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          placeholder="Conte um pouco sobre a empresa, cultura e ações de inclusão..."
+        />
       </div>
 
       <button
         type="button"
-        className="save-btn"
-        onClick={salvarAlteracoes}
-        disabled={isSaving}
+        className={`save-btn ${isSaved ? "saved" : ""}`}
+        onClick={handleSave}
+        disabled={isSaving || isSaved}
       >
-        {isSaving ? "Salvando..." : "Salvar alterações"}
+        {isSaving
+          ? "Salvando..."
+          : isSaved
+            ? "Salvo com sucesso! ✅"
+            : "Salvar alterações"}
       </button>
     </div>
   );

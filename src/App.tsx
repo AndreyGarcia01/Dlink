@@ -13,36 +13,29 @@ function App() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
 
-  // O Login agora precisa nos passar o "role" (perfil)
   const handleLogin = (email: string, role: string) => {
     setUserEmail(email);
     setUserName(email.split("@")[0] || "usuário");
-
-    // Redireciona baseado no perfil
-    if (role === "company") {
-      setView("company_dashboard");
-    } else {
-      setView("candidate_dashboard");
-    }
+    if (role === "company") setView("company_dashboard");
+    else setView("candidate_dashboard");
   };
 
   const handleSignup = (name: string, email: string, role: string) => {
     setUserName(name || email.split("@")[0]);
     setUserEmail(email);
-
-    if (role === "company") {
-      setView("company_dashboard");
-    } else {
-      setView("candidate_dashboard");
-    }
+    if (role === "company") setView("company_dashboard");
+    else setView("candidate_dashboard");
   };
 
   const handleLogout = () => {
-    localStorage.clear(); // Limpa o token ao sair
+    localStorage.clear();
     setView("login");
   };
 
-  // Função auxiliar para decidir qual tela mostrar
+  const handleUpdateName = (newName: string) => {
+    setUserName(newName);
+  };
+
   const renderView = () => {
     if (view === "signup") {
       return (
@@ -52,7 +45,6 @@ function App() {
         />
       );
     }
-
     if (view === "login") {
       return (
         <Login
@@ -61,26 +53,29 @@ function App() {
         />
       );
     }
-
     if (view === "company_dashboard") {
-      return <PainelEmpresa onLogout={handleLogout} />;
+      return (
+        <PainelEmpresa
+          userName={userName}
+          userEmail={userEmail}
+          onLogout={handleLogout}
+          onUpdateName={handleUpdateName}
+        />
+      );
     }
-
     return (
       <Dashboard
         userName={userName}
         userEmail={userEmail}
         onLogout={handleLogout}
+        onUpdateName={handleUpdateName}
       />
     );
   };
 
   return (
     <>
-      {/* Renderiza a tela atual (Login, Dashboard ou Painel) */}
       {renderView()}
-
-      {/* O widget do VLibras fica fixo no canto em todas as telas */}
       <ReactVLibras position="bottomRight" avatar="guga" />
     </>
   );

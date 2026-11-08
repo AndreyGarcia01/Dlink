@@ -1,25 +1,25 @@
 import { useState, FormEvent } from "react";
 import axios from "axios";
-import { api } from "../services/api"; // Importando a conexão com o backend
+import { api } from "../services/api";
 
 interface LoginProps {
-  onLogin: (email: string, role: string) => void; // <-- MUDANÇA 1: Adicionado o role aqui
+  onLogin: (email: string, role: string) => void;
   onCreateAccount: () => void;
 }
 
 function Login({ onLogin, onCreateAccount }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // NOVO
+
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
-
-  // Novos estados para controle da API
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setApiError(""); // Limpa erros anteriores
+    setApiError("");
 
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     const passwordOk = password.length > 0;
@@ -29,10 +29,9 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
     if (!emailOk || !passwordOk) return;
 
-    setIsLoading(true); // Ativa o "carregando"
+    setIsLoading(true);
 
     try {
-      // Chamando o backend Node.js que está rodando na porta 3333
       const response = await api.post("/auth/login", {
         email: email.trim(),
         password,
@@ -40,15 +39,11 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
       const { token, user } = response.data;
 
-      // Salva o token e os dados do usuário no navegador
       localStorage.setItem("@DLink:token", token);
       localStorage.setItem("@DLink:user", JSON.stringify(user));
 
-      // Avisa o componente pai que o login deu certo
-      onLogin(email.trim(), user.role); // <-- MUDANÇA 2: Passando o role para o App.tsx
+      onLogin(email.trim(), user.role);
     } catch (error) {
-      // Se o backend retornar erro (ex: senha inválida), mostra a mensagem dele.
-      // O "error" vem como "unknown"; o isAxiosError confirma que é um erro do axios.
       if (
         axios.isAxiosError<{ error?: string }>(error) &&
         error.response?.data?.error
@@ -58,7 +53,7 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
         setApiError("Erro ao conectar com o servidor.");
       }
     } finally {
-      setIsLoading(false); // Desativa o "carregando"
+      setIsLoading(false);
     }
   };
 
@@ -79,7 +74,6 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
       <div className="login-card">
         <form onSubmit={handleSubmit} noValidate>
-          {/* Mostra a mensagem de erro se o backend retornar algo */}
           {apiError && (
             <div
               style={{
@@ -111,17 +105,28 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
           <div className={`field${passwordError ? " invalid" : ""}`}>
             <label htmlFor="password">Senha</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Sua senha"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (passwordError) setPasswordError(false);
-              }}
-            />
+            {/* NOVO: password-wrap para o olhinho */}
+            <div className="password-wrap">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                placeholder="Sua senha"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError(false);
+                }}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label="Mostrar senha"
+              >
+                👁
+              </button>
+            </div>
             <div className="field-error">Digite sua senha.</div>
           </div>
 

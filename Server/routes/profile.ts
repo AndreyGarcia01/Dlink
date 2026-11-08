@@ -29,7 +29,7 @@ router.get("/me", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ATUALIZAR PERFIL (Agora aceita campos de empresa também)
+// ATUALIZAR PERFIL
 router.put("/me", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -42,6 +42,8 @@ router.put("/me", async (req: AuthRequest, res: Response) => {
       communicationPreference,
       bio,
       skills,
+      experience,
+      education,
       cnpj,
       companyDescription,
       sector,
@@ -60,13 +62,23 @@ router.put("/me", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Se for candidato e enviou bio/skills, atualiza o perfil dele
-    if (bio || skills) {
+    if (bio || skills || experience || education) {
       const skillsString = Array.isArray(skills) ? skills.join(", ") : skills;
       await prisma.candidateProfile.upsert({
         where: { userId: userId },
-        update: { bio, skills: skillsString },
-        create: { userId: userId, bio, skills: skillsString },
+        update: {
+          bio,
+          skills: skillsString,
+          experience,
+          education,
+        },
+        create: {
+          userId: userId,
+          bio,
+          skills: skillsString,
+          experience,
+          education,
+        },
       });
     }
 

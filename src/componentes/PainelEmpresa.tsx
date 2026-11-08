@@ -2,53 +2,43 @@ import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import axios from "axios";
 import PerfilEmpresa from "./PerfilEmpresa";
+import type { Job } from "../types/job";
+import type { Application } from "../types/application";
 
+// 1. ATUALIZAÇÃO DA INTERFACE
 interface PainelEmpresaProps {
+  userName: string;
+  userEmail: string;
   onLogout: () => void;
+  onUpdateName: (name: string) => void;
 }
 
-interface Job {
-  id: string;
-  title: string;
-  status: string;
-  location: string;
-  workRegion: string;
-  _count: { applications: number };
-}
+// 2. ATUALIZAÇÃO DOS PARÂMETROS
+function PainelEmpresa({
+  userName,
+  userEmail,
+  onLogout,
+  onUpdateName,
+}: PainelEmpresaProps) {
+  const initial = userName.charAt(0).toUpperCase(); // Letrinha da empresa
 
-interface Application {
-  id: string;
-  status: "pending" | "approved" | "rejected";
-  requiresInterpreter: boolean;
-  candidate: {
-    name: string;
-    email: string;
-    communicationPreference: string;
-    candidateProfile?: { bio: string; skills: string };
-  };
-}
-
-function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
   const [activeTab, setActiveTab] = useState<
     "vagas" | "criar" | "candidatos" | "perfil"
   >("vagas");
 
-  // Estados do formulário de vaga
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
   const [location, setLocation] = useState("");
   const [workRegion, setWorkRegion] = useState("Presencial");
 
-  // Estados de Vaga e Candidatos
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [selectedJobTitle, setSelectedJobTitle] = useState("");
   const [candidates, setCandidates] = useState<Application[]>([]);
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
 
-  async function carregarVagas() {
+  async function fetchJobs() {
     try {
       const response = await api.get("/jobs/company/me");
       setJobs(response.data);
@@ -60,10 +50,10 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
   }
 
   useEffect(() => {
-    if (activeTab === "vagas") carregarVagas();
+    if (activeTab === "vagas") fetchJobs();
   }, [activeTab]);
 
-  const handleCriarVaga = async (e: React.FormEvent) => {
+  const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await api.post("/jobs", {
@@ -87,7 +77,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
     }
   };
 
-  const verCandidatos = async (jobId: string, jobTitle: string) => {
+  const handleViewCandidates = async (jobId: string, jobTitle: string) => {
     setSelectedJobTitle(jobTitle);
     setActiveTab("candidatos");
     setIsLoadingCandidates(true);
@@ -101,7 +91,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
     }
   };
 
-  const alterarStatus = async (
+  const handleUpdateStatus = async (
     applicationId: string,
     newStatus: "approved" | "rejected",
   ) => {
@@ -119,7 +109,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
     }
   };
 
-  const encerrarVaga = async (jobId: string) => {
+  const handleCloseJob = async (jobId: string) => {
     if (
       !window.confirm(
         "Tem certeza que deseja encerrar esta vaga? Ela não aparecerá mais para os candidatos.",
@@ -130,13 +120,11 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
 
     try {
       await api.patch(`/jobs/${jobId}/close`);
-
       setJobs((prev) =>
         prev.map((job) =>
           job.id === jobId ? { ...job, status: "closed" } : job,
         ),
       );
-
       alert("Vaga encerrada com sucesso!");
     } catch {
       alert("Erro ao encerrar a vaga.");
@@ -172,7 +160,15 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           </button>
         </nav>
 
+        {/* 3. ATUALIZAÇÃO DO FOOTER DA SIDEBAR */}
         <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="sidebar-avatar">{initial}</div>
+            <div>
+              <div className="sidebar-user-name">{userName}</div>
+              <div className="sidebar-user-email">{userEmail}</div>
+            </div>
+          </div>
           <button className="sidebar-logout" onClick={onLogout}>
             Sair
           </button>
@@ -205,8 +201,6 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                       </p>
                     </div>
 
-                    {/* FOOTER DO CARD COM OS BOTÕES ALINHADOS */}
-                    {/* FOOTER DO CARD COM OS BOTÕES RESPONSIVOS */}
                     <div
                       className="job-footer"
                       style={{
@@ -216,7 +210,6 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         gap: "12px",
                       }}
                     >
-                      {/* Contagem de candidatos no topo */}
                       <span
                         style={{
                           fontSize: "14px",
@@ -224,10 +217,9 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                           fontWeight: "500",
                         }}
                       >
-                        👥 {job._count.applications} candidato(s)
+                        👥 {job._count?.applications || 0} candidato(s)
                       </span>
 
-                      {/* Botões embaixo, dividindo o espaço */}
                       <div
                         style={{ display: "flex", gap: "8px", width: "100%" }}
                       >
@@ -240,7 +232,9 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                             fontSize: "13px",
                             whiteSpace: "nowrap",
                           }}
-                          onClick={() => verCandidatos(job.id, job.title)}
+                          onClick={() =>
+                            handleViewCandidates(job.id, job.title)
+                          }
                         >
                           Ver Candidatos
                         </button>
@@ -257,7 +251,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                               borderColor: "#d32f2f",
                               whiteSpace: "nowrap",
                             }}
-                            onClick={() => encerrarVaga(job.id)}
+                            onClick={() => handleCloseJob(job.id)}
                           >
                             Encerrar
                           </button>
@@ -275,7 +269,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
         {activeTab === "criar" && (
           <div className="perfil-page" style={{ textAlign: "left" }}>
             <h1>Publicar Nova Vaga</h1>
-            <form onSubmit={handleCriarVaga} className="perfil-card">
+            <form onSubmit={handleCreateJob} className="perfil-card">
               <div className="field">
                 <label>Título</label>
                 <input
@@ -359,8 +353,10 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                 {candidates.map((candidate) => (
                   <div key={candidate.id} className="job-card">
                     <div className="job-card-header">
-                      <h3>{candidate.candidate.name}</h3>
-                      <p className="job-company">{candidate.candidate.email}</p>
+                      <h3>{candidate.candidate?.name}</h3>
+                      <p className="job-company">
+                        {candidate.candidate?.email}
+                      </p>
                       <p
                         style={{
                           fontSize: "13px",
@@ -369,11 +365,10 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         }}
                       >
                         🗣️ Comunicação:{" "}
-                        {candidate.candidate.communicationPreference ||
+                        {candidate.candidate?.communicationPreference ||
                           "Não informada"}
                       </p>
 
-                      {/* AQUI ENTRA O ALERTA LARANJA */}
                       {candidate.requiresInterpreter && (
                         <div
                           style={{
@@ -419,7 +414,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                             className="save-btn"
                             style={{ background: "#2e7d32", padding: "10px" }}
                             onClick={() =>
-                              alterarStatus(candidate.id, "approved")
+                              handleUpdateStatus(candidate.id, "approved")
                             }
                           >
                             Aprovar
@@ -428,7 +423,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                             className="save-btn"
                             style={{ background: "#d32f2f", padding: "10px" }}
                             onClick={() =>
-                              alterarStatus(candidate.id, "rejected")
+                              handleUpdateStatus(candidate.id, "rejected")
                             }
                           >
                             Rejeitar
@@ -443,8 +438,9 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           </div>
         )}
 
-        {/* ABA DE PERFIL DA EMPRESA */}
-        {activeTab === "perfil" && <PerfilEmpresa />}
+        {activeTab === "perfil" && (
+          <PerfilEmpresa onUpdateName={onUpdateName} />
+        )}
       </main>
     </div>
   );
