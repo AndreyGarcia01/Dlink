@@ -1,278 +1,447 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect } from "react";
+import { api } from "../services/api";
+import axios from "axios";
+import PerfilEmpresa from "./PerfilEmpresa";
+import type { Job } from "../types/job";
+import type { Application } from "../types/application";
 
-interface Vaga {
-  id: number;
-  titulo: string;
-  modalidade: "Presencial" | "Híbrido" | "Remoto";
-  cidade: string;
-  descricao: string;
-  status: "Ativo" | "Encerrado";
-  candidatos: number;
-}
-
+// 1. ATUALIZAÇÃO DA INTERFACE
 interface PainelEmpresaProps {
-  nomeEmpresa: string;
+  userName: string;
+  userEmail: string;
+  onLogout: () => void;
+  onUpdateName: (name: string) => void;
 }
 
-const vagasIniciais: Vaga[] = [
-  {
-    id: 1,
-    titulo: "Marketing Digital",
-    modalidade: "Presencial",
-    cidade: "Joinville, SC",
-    descricao: "",
-    status: "Ativo",
-    candidatos: 0,
-  },
-  {
-    id: 2,
-    titulo: "Desenvolvedor Front-end pleno",
-    modalidade: "Híbrido",
-    cidade: "São Francisco do Sul, SC",
-    descricao: "",
-    status: "Encerrado",
-    candidatos: 0,
-  },
-];
+// 2. ATUALIZAÇÃO DOS PARÂMETROS
+function PainelEmpresa({
+  userName,
+  userEmail,
+  onLogout,
+  onUpdateName,
+}: PainelEmpresaProps) {
+  const initial = userName.charAt(0).toUpperCase(); // Letrinha da empresa
 
-function vagaVazia(): Omit<Vaga, "id" | "status" | "candidatos"> {
-  return { titulo: "", modalidade: "Presencial", cidade: "", descricao: "" };
-}
+  const [activeTab, setActiveTab] = useState<
+    "vagas" | "criar" | "candidatos" | "perfil"
+  >("vagas");
 
-function PainelEmpresa({ nomeEmpresa }: PainelEmpresaProps) {
-  const [vagas, setVagas] = useState<Vaga[]>(vagasIniciais);
-  const [view, setView] = useState<"lista" | "form">("lista");
-  const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [form, setForm] = useState(vagaVazia());
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [requirements, setRequirements] = useState("");
+  const [location, setLocation] = useState("");
+  const [workRegion, setWorkRegion] = useState("Presencial");
 
-  const abrirNovaVaga = () => {
-    setEditandoId(null);
-    setForm(vagaVazia());
-    setView("form");
-  };
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedJobTitle, setSelectedJobTitle] = useState("");
+  const [candidates, setCandidates] = useState<Application[]>([]);
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
 
-  const abrirEdicao = (vaga: Vaga) => {
-    setEditandoId(vaga.id);
-    setForm({
-      titulo: vaga.titulo,
-      modalidade: vaga.modalidade,
-      cidade: vaga.cidade,
-      descricao: vaga.descricao,
-    });
-    setView("form");
-  };
-
-  const salvarVaga = (e: FormEvent) => {
-    e.preventDefault();
-    if (!form.titulo.trim()) return;
-
-    if (editandoId === null) {
-      const novaVaga: Vaga = {
-        id: Date.now(),
-        titulo: form.titulo.trim(),
-        modalidade: form.modalidade,
-        cidade: form.cidade.trim(),
-        descricao: form.descricao.trim(),
-        status: "Ativo",
-        candidatos: 0,
-      };
-      setVagas((prev) => [novaVaga, ...prev]);
-    } else {
-      setVagas((prev) =>
-        prev.map((v) =>
-          v.id === editandoId
-            ? {
-                ...v,
-                titulo: form.titulo.trim(),
-                modalidade: form.modalidade,
-                cidade: form.cidade.trim(),
-                descricao: form.descricao.trim(),
-              }
-            : v,
-        ),
-      );
+  async function fetchJobs() {
+    try {
+      const response = await api.get("/jobs/company/me");
+      setJobs(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setView("lista");
-  };
-
-  const alternarStatus = (id: number) => {
-    setVagas((prev) =>
-      prev.map((v) =>
-        v.id === id
-          ? { ...v, status: v.status === "Ativo" ? "Encerrado" : "Ativo" }
-          : v,
-      ),
-    );
-  };
-
-  if (view === "form") {
-    return (
-      <div className="painel-page">
-        <h1>{editandoId === null ? "Nova vaga" : "Editar vaga"}</h1>
-        <p className="dashboard-subtitle">Preencha os detalhes da vaga</p>
-
-        <div className="perfil-card">
-          <form onSubmit={salvarVaga}>
-            <div className="field">
-              <label htmlFor="vaga-titulo">Título da vaga *</label>
-              <input
-                id="vaga-titulo"
-                type="text"
-                placeholder="Ex: Desenvolvedor Front-end pleno"
-                value={form.titulo}
-                onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="field-row">
-              <div className="field">
-                <label htmlFor="vaga-modalidade">Modalidade</label>
-                <select
-                  id="vaga-modalidade"
-                  value={form.modalidade}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      modalidade: e.target.value as Vaga["modalidade"],
-                    })
-                  }
-                >
-                  <option>Presencial</option>
-                  <option>Híbrido</option>
-                  <option>Remoto</option>
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="vaga-cidade">Cidade/Estado</label>
-                <input
-                  id="vaga-cidade"
-                  type="text"
-                  placeholder="Ex: Joinville, SC"
-                  value={form.cidade}
-                  onChange={(e) => setForm({ ...form, cidade: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="field">
-              <label htmlFor="vaga-descricao">Descrição da vaga</label>
-              <textarea
-                id="vaga-descricao"
-                className="perfil-textarea"
-                placeholder="Descreva as responsabilidades, requisitos e benefícios..."
-                value={form.descricao}
-                onChange={(e) =>
-                  setForm({ ...form, descricao: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn-secondary btn-auto"
-                onClick={() => setView("lista")}
-              >
-                Cancelar
-              </button>
-              <button type="submit" className="btn-primary btn-auto">
-                {editandoId === null ? "Publicar vaga" : "Salvar alterações"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
   }
 
+  useEffect(() => {
+    if (activeTab === "vagas") fetchJobs();
+  }, [activeTab]);
+
+  const handleCreateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post("/jobs", {
+        title,
+        description,
+        requirements,
+        location,
+        workRegion,
+        category: "Geral",
+      });
+      alert("Vaga publicada com sucesso!");
+      setTitle("");
+      setDescription("");
+      setRequirements("");
+      setLocation("");
+      setActiveTab("vagas");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error)
+        alert(error.response.data.error);
+      else alert("Erro ao publicar vaga.");
+    }
+  };
+
+  const handleViewCandidates = async (jobId: string, jobTitle: string) => {
+    setSelectedJobTitle(jobTitle);
+    setActiveTab("candidatos");
+    setIsLoadingCandidates(true);
+    try {
+      const response = await api.get(`/jobs/${jobId}/candidates`);
+      setCandidates(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar candidatos", error);
+    } finally {
+      setIsLoadingCandidates(false);
+    }
+  };
+
+  const handleUpdateStatus = async (
+    applicationId: string,
+    newStatus: "approved" | "rejected",
+  ) => {
+    try {
+      await api.put(`/applications/${applicationId}/status`, {
+        status: newStatus,
+      });
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === applicationId ? { ...c, status: newStatus } : c,
+        ),
+      );
+    } catch {
+      alert("Erro ao atualizar status.");
+    }
+  };
+
+  const handleCloseJob = async (jobId: string) => {
+    if (
+      !window.confirm(
+        "Tem certeza que deseja encerrar esta vaga? Ela não aparecerá mais para os candidatos.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.patch(`/jobs/${jobId}/close`);
+      setJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId ? { ...job, status: "closed" } : job,
+        ),
+      );
+      alert("Vaga encerrada com sucesso!");
+    } catch {
+      alert("Erro ao encerrar a vaga.");
+    }
+  };
+
   return (
-    <div className="painel-page">
-      <div className="painel-header">
-        <div>
-          <h1>Painel da empresa</h1>
-          <p className="dashboard-subtitle">{nomeEmpresa}</p>
+    <div className="dashboard-layout">
+      <aside className="dashboard-sidebar">
+        <div className="sidebar-logo">
+          <div className="mini-logo">D</div>
+          <span className="mini-logo-text">D-Link</span>
         </div>
-        <button
-          type="button"
-          className="btn-primary btn-auto"
-          onClick={abrirNovaVaga}
-        >
-          + Nova vaga
-        </button>
-      </div>
 
-      <h3 className="painel-section-title">Suas vagas</h3>
+        <nav className="sidebar-nav">
+          <button
+            className={`nav-item ${activeTab === "vagas" ? "active" : ""}`}
+            onClick={() => setActiveTab("vagas")}
+          >
+            Minhas Vagas
+          </button>
+          <button
+            className={`nav-item ${activeTab === "criar" ? "active" : ""}`}
+            onClick={() => setActiveTab("criar")}
+          >
+            Publicar Nova Vaga
+          </button>
+          <button
+            className={`nav-item ${activeTab === "perfil" ? "active" : ""}`}
+            onClick={() => setActiveTab("perfil")}
+          >
+            Meu Perfil
+          </button>
+        </nav>
 
-      {vagas.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="2" y="7" width="20" height="14" rx="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-          </div>
-          <h3>Nenhuma vaga publicada</h3>
-          <p>Clique em "Nova vaga" para publicar a primeira.</p>
-        </div>
-      ) : (
-        <div className="vaga-list">
-          {vagas.map((vaga) => (
-            <div key={vaga.id} className="vaga-card">
-              <div className="vaga-info">
-                <div className="vaga-title-row">
-                  <button
-                    type="button"
-                    className="vaga-title-btn"
-                    onClick={() => abrirEdicao(vaga)}
-                  >
-                    {vaga.titulo}
-                  </button>
-                  <span
-                    className={`status-badge${vaga.status === "Ativo" ? " active" : " closed"}`}
-                  >
-                    {vaga.status}
-                  </span>
-                </div>
-                <div className="vaga-tags">
-                  <span className="job-tag">{vaga.modalidade}</span>
-                  {vaga.cidade && (
-                    <span className="vaga-meta">{vaga.cidade}</span>
-                  )}
-                  <span className="vaga-meta">
-                    👥 {vaga.candidatos} candidatos
-                  </span>
-                </div>
-              </div>
-              <div className="vaga-actions">
-                <button
-                  type="button"
-                  className="btn-primary btn-auto btn-small"
-                >
-                  👥 Candidatos
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary btn-auto btn-small"
-                  onClick={() => alternarStatus(vaga.id)}
-                >
-                  {vaga.status === "Ativo" ? "Encerrar" : "Reativar"}
-                </button>
-              </div>
+        {/* 3. ATUALIZAÇÃO DO FOOTER DA SIDEBAR */}
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="sidebar-avatar">{initial}</div>
+            <div>
+              <div className="sidebar-user-name">{userName}</div>
+              <div className="sidebar-user-email">{userEmail}</div>
             </div>
-          ))}
+          </div>
+          <button className="sidebar-logout" onClick={onLogout}>
+            Sair
+          </button>
         </div>
-      )}
+      </aside>
+
+      <main className="dashboard-main">
+        {/* ABA DE VAGAS */}
+        {activeTab === "vagas" && (
+          <div>
+            <h1>Minhas Vagas</h1>
+            <p className="dashboard-subtitle">
+              Gerencie as oportunidades que você publicou
+            </p>
+            {isLoading ? (
+              <p>Carregando vagas...</p>
+            ) : (
+              <div className="jobs-grid">
+                {jobs.map((job) => (
+                  <div key={job.id} className="job-card">
+                    <div className="job-card-header">
+                      <span
+                        className={`job-tag ${job.status === "active" ? "bg-green" : "bg-gray"}`}
+                      >
+                        {job.status === "active" ? "Ativa" : "Encerrada"}
+                      </span>
+                      <h3>{job.title}</h3>
+                      <p className="job-company">
+                        📍 {job.location} • 💼 {job.workRegion}
+                      </p>
+                    </div>
+
+                    <div
+                      className="job-footer"
+                      style={{
+                        marginTop: "16px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          color: "#666",
+                          fontWeight: "500",
+                        }}
+                      >
+                        👥 {job._count?.applications || 0} candidato(s)
+                      </span>
+
+                      <div
+                        style={{ display: "flex", gap: "8px", width: "100%" }}
+                      >
+                        <button
+                          className="btn-apply"
+                          style={{
+                            flex: 1,
+                            marginTop: 0,
+                            padding: "8px",
+                            fontSize: "13px",
+                            whiteSpace: "nowrap",
+                          }}
+                          onClick={() =>
+                            handleViewCandidates(job.id, job.title)
+                          }
+                        >
+                          Ver Candidatos
+                        </button>
+
+                        {job.status === "active" && (
+                          <button
+                            className="btn-secondary"
+                            style={{
+                              flex: 1,
+                              marginTop: 0,
+                              padding: "8px",
+                              fontSize: "13px",
+                              color: "#d32f2f",
+                              borderColor: "#d32f2f",
+                              whiteSpace: "nowrap",
+                            }}
+                            onClick={() => handleCloseJob(job.id)}
+                          >
+                            Encerrar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ABA DE CRIAR VAGA */}
+        {activeTab === "criar" && (
+          <div className="perfil-page" style={{ textAlign: "left" }}>
+            <h1>Publicar Nova Vaga</h1>
+            <form onSubmit={handleCreateJob} className="perfil-card">
+              <div className="field">
+                <label>Título</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label>Descrição</label>
+                <textarea
+                  className="perfil-textarea"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label>Requisitos</label>
+                <textarea
+                  className="perfil-textarea"
+                  value={requirements}
+                  onChange={(e) => setRequirements(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="field-row">
+                <div className="field">
+                  <label>Localidade</label>
+                  <input
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label>Regime</label>
+                  <select
+                    value={workRegion}
+                    onChange={(e) => setWorkRegion(e.target.value)}
+                  >
+                    <option>Presencial</option>
+                    <option>Híbrido</option>
+                    <option>Remoto</option>
+                  </select>
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="save-btn"
+                style={{ marginTop: "20px" }}
+              >
+                Publicar Vaga
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ABA DE CANDIDATOS */}
+        {activeTab === "candidatos" && (
+          <div>
+            <button
+              className="btn-secondary"
+              style={{
+                width: "auto",
+                marginBottom: "20px",
+                padding: "8px 16px",
+              }}
+              onClick={() => setActiveTab("vagas")}
+            >
+              ← Voltar para Minhas Vagas
+            </button>
+            <h1>Candidatos para: {selectedJobTitle}</h1>
+
+            {isLoadingCandidates ? (
+              <p>Buscando candidatos...</p>
+            ) : candidates.length === 0 ? (
+              <p>Nenhum candidato se aplicou a esta vaga ainda.</p>
+            ) : (
+              <div className="jobs-grid">
+                {candidates.map((candidate) => (
+                  <div key={candidate.id} className="job-card">
+                    <div className="job-card-header">
+                      <h3>{candidate.candidate?.name}</h3>
+                      <p className="job-company">
+                        {candidate.candidate?.email}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "13px",
+                          marginTop: "8px",
+                          color: "#666",
+                        }}
+                      >
+                        🗣️ Comunicação:{" "}
+                        {candidate.candidate?.communicationPreference ||
+                          "Não informada"}
+                      </p>
+
+                      {candidate.requiresInterpreter && (
+                        <div
+                          style={{
+                            marginTop: "12px",
+                            padding: "10px",
+                            background: "#fff3e0",
+                            borderLeft: "4px solid #ef6c00",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: "13px",
+                              color: "#ef6c00",
+                              fontWeight: "bold",
+                              margin: 0,
+                            }}
+                          >
+                            ⚠️ Necessita de intérprete de Libras
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: "20px",
+                        paddingTop: "15px",
+                        borderTop: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <p style={{ marginBottom: "10px", fontWeight: "bold" }}>
+                        Status:{" "}
+                        {candidate.status === "pending"
+                          ? "⏳ Em análise"
+                          : candidate.status === "approved"
+                            ? "✅ Aprovado"
+                            : "❌ Rejeitado"}
+                      </p>
+
+                      {candidate.status === "pending" && (
+                        <div style={{ display: "flex", gap: "10px" }}>
+                          <button
+                            className="save-btn"
+                            style={{ background: "#2e7d32", padding: "10px" }}
+                            onClick={() =>
+                              handleUpdateStatus(candidate.id, "approved")
+                            }
+                          >
+                            Aprovar
+                          </button>
+                          <button
+                            className="save-btn"
+                            style={{ background: "#d32f2f", padding: "10px" }}
+                            onClick={() =>
+                              handleUpdateStatus(candidate.id, "rejected")
+                            }
+                          >
+                            Rejeitar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "perfil" && (
+          <PerfilEmpresa onUpdateName={onUpdateName} />
+        )}
+      </main>
     </div>
   );
 }
