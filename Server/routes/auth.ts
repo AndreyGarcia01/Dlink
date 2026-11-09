@@ -43,9 +43,6 @@ router.post("/register", async (req: Request, res: Response) => {
         .json({ error: "A senha deve ter no mínimo 6 caracteres." });
     }
 
-    // ==========================================
-    // AQUI ESTÁ A CORREÇÃO DE SEGURANÇA DO SEU COLEGA
-    // ==========================================
     const allowedRoles = ["candidate", "company"];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({
