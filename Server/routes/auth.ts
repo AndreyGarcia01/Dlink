@@ -43,13 +43,6 @@ router.post("/register", async (req: Request, res: Response) => {
         .json({ error: "A senha deve ter no mínimo 6 caracteres." });
     }
 
-    const allowedRoles = ["candidate", "company"];
-    if (!allowedRoles.includes(role)) {
-      return res.status(400).json({
-        error: "Perfil inválido. Escolha 'candidate' ou 'company'.",
-      });
-    }
-
     // Verificar se e-mail já existe
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) {
@@ -66,7 +59,7 @@ router.post("/register", async (req: Request, res: Response) => {
         name,
         email,
         passwordHash,
-        role: role as "candidate" | "company", // TypeScript agora sabe que o role é seguro
+        role,
         hearingLossLevel: role === "candidate" ? hearingLossLevel : null,
         communicationPreference:
           role === "candidate" ? communicationPreference : null,
@@ -76,16 +69,11 @@ router.post("/register", async (req: Request, res: Response) => {
       },
     });
 
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
-      expiresIn: "1d",
-    });
-
     // Separa a senha do resto dos dados (ela nunca volta para o front-end)
     const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
     return res.status(201).json({
       message: "Conta criada com sucesso!",
-      token,
       user: userWithoutPassword,
     });
   } catch (error) {
