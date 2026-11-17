@@ -166,7 +166,7 @@ button {
   border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 .btn-primary:hover {
   background: var(--primary-dark);
@@ -181,7 +181,7 @@ button {
   border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 .btn-secondary:hover {
   background: var(--surface);
@@ -302,7 +302,7 @@ button {
   color: var(--text-muted);
   transition:
     border-color 0.15s ease,
-    background 0.15s ease,
+    background-color 0.15s ease,
     color 0.15s ease;
 }
 .type-icon {
@@ -662,15 +662,23 @@ header {
   font-size: 14.5px;
   font-weight: 600;
   color: var(--text-muted);
+
+  background: transparent;
   border: none;
-  background: none;
   width: 100%;
   text-align: left;
   font-family: inherit;
+  outline: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
+
 .nav-item:hover {
   background: var(--surface);
+  color: var(--primary);
 }
+
 .nav-item.active {
   background: var(--primary);
   color: var(--white);
@@ -818,6 +826,217 @@ header {
   color: var(--text-muted);
 }
 
+/* ===================== TELA DE PERFIL ===================== */
+.perfil-page {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center; /* Centraliza o título e o subtítulo */
+}
+
+.perfil-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(8, 32, 46, 0.03);
+  text-align: left;
+}
+
+.perfil-card h3 {
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.perfil-basic-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.perfil-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.perfil-name-field {
+  flex: 1;
+}
+
+.perfil-page .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.perfil-page .field label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Estilo para os inputs e selects do perfil */
+.perfil-page .field input,
+.perfil-page .field select,
+.perfil-textarea,
+.skill-add-row input {
+  width: 100%;
+  padding: 0 16px;
+  height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--ink);
+  transition: border-color 0.15s ease;
+}
+
+.perfil-page .field input:focus,
+.perfil-page .field select:focus,
+.perfil-textarea:focus,
+.skill-add-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.perfil-textarea {
+  height: 120px;
+  padding: 12px 16px;
+  resize: vertical;
+}
+
+.perfil-page .field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Habilidades */
+.skill-add-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.skill-add-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.skill-add-btn:hover {
+  background: var(--primary-dark);
+}
+
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-tag {
+  background: var(--surface);
+  color: var(--primary-dark);
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-tag button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Botão Salvar Perfil */
+.save-btn {
+  width: 100%;
+  height: 46px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+  margin-top: 10px;
+}
+
+.save-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* Botões de Adicionar (Experiência e Formação) */
+.add-link {
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.15s ease;
+}
+
+.add-link:hover {
+  background: var(--primary-dark);
+}
+
+.perfil-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.perfil-card-header h3 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.perfil-empty-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
 @media (max-width: 760px) {
   .dashboard-layout {
     flex-direction: column;
@@ -838,317 +1057,172 @@ header {
     padding: 24px 20px;
   }
 }
+/* ===================== CARDS DE VAGAS ===================== */
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
 
-/* ===================== PERFIL ===================== */
-.perfil-page h1 {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.perfil-page > .dashboard-subtitle {
-  margin-bottom: 24px;
-}
-.perfil-card {
+.job-card {
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 22px 24px;
-  margin-bottom: 18px;
-}
-.perfil-card h3 {
-  font-size: 15.5px;
-  font-weight: 700;
-  margin-bottom: 16px;
-}
-.perfil-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-.perfil-card-header h3 {
-  margin-bottom: 0;
-}
-.add-link {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 13.5px;
-  font-weight: 700;
-}
-.add-link:hover {
-  text-decoration: underline;
-}
-
-.perfil-basic-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-.perfil-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Sora", sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.perfil-name-field {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.perfil-textarea {
-  width: 100%;
-  min-height: 90px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  font-size: 14.5px;
-  font-family: inherit;
-  resize: vertical;
-}
-.perfil-textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.skill-add-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.skill-add-row input {
-  flex: 1;
-  height: 44px;
-  padding: 0 14px;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  font-size: 14.5px;
-  font-family: inherit;
-}
-.skill-add-row input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-.skill-add-btn {
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: 10px;
-  background: var(--primary);
-  color: var(--white);
-  font-size: 20px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-.skill-add-btn:hover {
-  background: var(--primary-dark);
-}
-
-.perfil-empty-hint {
-  font-size: 13.5px;
-  color: var(--text-muted);
-}
-.perfil-hint {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
-.skill-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.skill-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 6px 8px 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--primary-dark);
-}
-.skill-tag button {
-  background: none;
-  border: none;
-  font-size: 15px;
-  line-height: 1;
-  color: var(--text-muted);
-  padding: 2px 4px;
-}
-.skill-tag button:hover {
-  color: #c0392b;
-}
-
-.video-icon {
-  color: var(--primary);
-}
-.upload-btn {
-  width: 100%;
-  height: 46px;
-  background: var(--surface);
-  border: 1.5px dashed var(--line);
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.upload-btn:hover {
-  border-color: var(--primary);
-  color: var(--primary-dark);
-}
-
-.save-btn {
-  width: 100%;
-  height: 48px;
-  background: var(--primary);
-  color: var(--white);
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
-  margin-top: 4px;
-}
-.save-btn:hover {
-  background: var(--primary-dark);
-}
-
-/* ===================== PAINEL DA EMPRESA ===================== */
-.painel-page h1 {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.painel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 28px;
-}
-.painel-section-title {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 14px;
-}
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 8px;
-}
-.btn-small {
-  height: 38px;
-  padding: 0 16px;
-  font-size: 13.5px;
-}
-
-.vaga-list {
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-.vaga-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.vaga-info {
-  flex: 1;
-  min-width: 220px;
-}
-.vaga-title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-.vaga-title-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ink);
-  font-family: inherit;
-  padding: 0;
-  text-align: left;
-}
-.vaga-title-btn:hover {
-  color: var(--primary);
-  text-decoration: underline;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
-.status-badge {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-}
-.status-badge.active {
-  background: #e4f7ec;
-  color: #1e8a4c;
-}
-.status-badge.closed {
-  background: #f1f1f1;
-  color: #777;
+.job-card:hover {
+  box-shadow: 0 8px 24px rgba(8, 32, 46, 0.08);
+  transform: translateY(-2px);
 }
 
-.vaga-tags {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.job-card-header {
+  margin-bottom: 12px;
 }
+
 .job-tag {
   background: var(--surface);
-  border: 1px solid var(--line);
-  color: var(--primary-dark);
+  color: var(--primary);
   font-size: 12px;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 20px;
-}
-.vaga-meta {
-  font-size: 12.5px;
-  color: var(--text-muted);
-}
-.vaga-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 150px;
+  display: inline-block;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
 }
 
-@media (max-width: 640px) {
-  .painel-header {
-    flex-direction: column;
+.job-card h3 {
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.job-company {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.job-description {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+  flex: 1; /* Empurra o rodapé para baixo */
+}
+
+.job-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.btn-apply {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-apply:hover {
+  background: var(--primary-dark);
+}
+
+.btn-apply:active {
+  transform: scale(0.98); /* Efeito de apertar o botão */
+}
+
+/* ESTILO DE SUCESSO (VERDE E ACESSÍVEL) */
+.btn-apply.applied {
+  background-color: #2e7d32; /* Verde escuro para alto contraste */
+  color: #ffffff;
+  cursor: default;
+  pointer-events: none; /* Impede novos cliques */
+  animation: pop 0.3s ease-out; /* Animaçãozinha de "estalo" */
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
   }
-  .vaga-card {
-    flex-direction: column;
-    align-items: stretch;
+  50% {
+    transform: scale(1.05);
   }
-  .vaga-actions {
-    flex-direction: row;
+  100% {
+    transform: scale(1);
   }
-  .vaga-actions button {
-    flex: 1;
+}
+
+.job-tag.bg-green {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #c8e6c9;
+}
+
+.job-tag.bg-gray {
+  background: #f5f5f5;
+  color: #757575;
+  border-color: #e0e0e0;
+}
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.status-pending {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+.status-approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.status-rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.save-btn.saved {
+  background-color: #2e7d32 !important; /* Verde */
+  color: white !important;
+  cursor: default;
+  animation: pop 0.3s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
   }
 }
