@@ -662,11 +662,16 @@ header {
   font-size: 14.5px;
   font-weight: 600;
   color: var(--text-muted);
+
+  background: transparent;
   border: none;
-  background: none;
   width: 100%;
   text-align: left;
   font-family: inherit;
+  outline: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .nav-item:hover {

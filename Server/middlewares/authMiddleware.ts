@@ -1,13 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET não definido no arquivo .env");
-}
 
 export interface AuthRequest extends Request {
   user?: { id: string; role: string };
@@ -27,11 +19,10 @@ export const ensureAuthenticated = (
   const [, token] = authHeader.split(" ");
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as {
-      id: string;
-      role: string;
-    };
-
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "chave_secreta_fallback",
+    ) as { id: string; role: string };
     req.user = decoded;
     return next();
   } catch {

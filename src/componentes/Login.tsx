@@ -1,6 +1,6 @@
 import { useState, FormEvent } from "react";
 import axios from "axios";
-import { api } from "../services/api";
+import { api } from "../services/api"; // Importando a conexão com o backend
 
 interface LoginProps {
   // 1. ADICIONANDO O "name" NA INTERFACE
@@ -15,9 +15,13 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
   const [passwordError, setPasswordError] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Novos estados para controle da API
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setApiError("");
+    setApiError(""); // Limpa erros anteriores
 
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     const passwordOk = password.length > 0;
@@ -27,9 +31,10 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
     if (!emailOk || !passwordOk) return;
 
-    setIsLoading(true);
+    setIsLoading(true); // Ativa o "carregando"
 
     try {
+      // Chamando o backend Node.js que está rodando na porta 3333
       const response = await api.post("/auth/login", {
         email: email.trim(),
         password,
@@ -37,12 +42,15 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
       const { token, user } = response.data;
 
+      // Salva o token e os dados do usuário no navegador
       localStorage.setItem("@DLink:token", token);
       localStorage.setItem("@DLink:user", JSON.stringify(user));
 
-      // 2. ENVIANDO O NOME PARA O APP.TSX
-      onLogin(email.trim(), user.role, user.name);
+      // Avisa o componente pai que o login deu certo
+      onLogin(email.trim());
     } catch (error) {
+      // Se o backend retornar erro (ex: senha inválida), mostra a mensagem dele.
+      // O "error" vem como "unknown"; o isAxiosError confirma que é um erro do axios.
       if (
         axios.isAxiosError<{ error?: string }>(error) &&
         error.response?.data?.error
@@ -52,7 +60,7 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
         setApiError("Erro ao conectar com o servidor.");
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Desativa o "carregando"
     }
   };
 
@@ -73,6 +81,7 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
       <div className="login-card">
         <form onSubmit={handleSubmit} noValidate>
+          {/* Mostra a mensagem de erro se o backend retornar algo */}
           {apiError && (
             <div
               style={{

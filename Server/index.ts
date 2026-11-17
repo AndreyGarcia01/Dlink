@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth";
+import profileRoutes from "./routes/profile"; // <-- ADICIONE AQUI
 
 dotenv.config();
 
@@ -14,8 +15,8 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Backend do D-Link está rodando!" });
 });
 
-// AQUI É ONDE A ROTA É MONTADA
-app.use("/api/auth", authRoutes); // <-- E TEM QUE ESTAR AQUI
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes); // <-- ADICIONE AQUI
 
 const PORT = process.env.PORT || 3333;
 

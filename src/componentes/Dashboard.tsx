@@ -1,6 +1,5 @@
 import { useState } from "react";
-import Perfil from "./perfil";
-import PerfilEmpresa from "./PerfilEmpresa";
+import Perfil from "./Perfil"; // Importando a tela de perfil que fizemos
 
 interface DashboardProps {
   userName: string;
@@ -85,6 +84,11 @@ function Dashboard({
     setPage(destino);
   };
 
+  // Estado para controlar qual aba está ativa
+  const [activeTab, setActiveTab] = useState<
+    "inicio" | "candidaturas" | "perfil"
+  >("inicio");
+
   return (
     <div className="dashboard-layout">
       <aside className="dashboard-sidebar">
@@ -93,10 +97,11 @@ function Dashboard({
           <span className="mini-logo-text">D-Link</span>
         </div>
         <nav className="sidebar-nav">
-          <a
-            href="#"
-            className={`nav-item${page === "inicio" ? " active" : ""}`}
-            onClick={(e) => goTo(e, "inicio")}
+          {/* BOTÃO INÍCIO */}
+          <button
+            type="button"
+            className={`nav-item ${activeTab === "inicio" ? "active" : ""}`}
+            onClick={() => setActiveTab("inicio")}
           >
             <svg
               width="18"
@@ -112,11 +117,13 @@ function Dashboard({
               <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
             </svg>
             Início
-          </a>
-          <a
-            href="#"
-            className={`nav-item${page === "candidaturas" ? " active" : ""}`}
-            onClick={(e) => goTo(e, "candidaturas")}
+          </button>
+
+          {/* BOTÃO CANDIDATURAS */}
+          <button
+            type="button"
+            className={`nav-item ${activeTab === "candidaturas" ? "active" : ""}`}
+            onClick={() => setActiveTab("candidaturas")}
           >
             <svg
               width="18"
@@ -132,11 +139,13 @@ function Dashboard({
               <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </svg>
             Candidaturas
-          </a>
-          <a
-            href="#"
-            className={`nav-item${page === "perfil" ? " active" : ""}`}
-            onClick={(e) => goTo(e, "perfil")}
+          </button>
+
+          {/* BOTÃO MEU PERFIL */}
+          <button
+            type="button"
+            className={`nav-item ${activeTab === "perfil" ? "active" : ""}`}
+            onClick={() => setActiveTab("perfil")}
           >
             <svg
               width="18"
@@ -169,7 +178,8 @@ function Dashboard({
       </aside>
 
       <main className="dashboard-main">
-        {page === "inicio" && (
+        {/* ABA INÍCIO (Sua tela original) */}
+        {activeTab === "inicio" && (
           <>
             <h1>Bem-vindo, {userName}!</h1>
             <p className="dashboard-subtitle">
@@ -242,41 +252,25 @@ function Dashboard({
           </>
         )}
 
-        {page === "candidaturas" && (
-          <>
-            <h1>Candidaturas</h1>
+        {/* ABA CANDIDATURAS (Placeholder por enquanto) */}
+        {activeTab === "candidaturas" && (
+          <div>
+            <h1>Minhas Candidaturas</h1>
             <p className="dashboard-subtitle">
-              Acompanhe as vagas para as quais você se candidatou
+              Acompanhe o status das suas candidaturas
             </p>
-
-            <div className="empty-state">
-              <div className="empty-icon">
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="7" width="20" height="14" rx="2" />
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                </svg>
-              </div>
+            <div className="empty-state" style={{ marginTop: "40px" }}>
               <h3>Nenhuma candidatura ainda</h3>
-              <p>Quando você se candidatar a uma vaga, ela aparecerá aqui.</p>
+              <p>
+                Explore as vagas disponíveis e candidate-se às que mais combinam
+                com você.
+              </p>
             </div>
-          </>
+          </div>
         )}
 
-        {page === "perfil" &&
-          (accountType === "empresa" ? (
-            <PerfilEmpresa nomeEmpresa={userName} />
-          ) : (
-            <Perfil />
-          ))}
+        {/* ABA MEU PERFIL (Chamando o componente real) */}
+        {activeTab === "perfil" && <Perfil />}
       </main>
     </div>
   );
