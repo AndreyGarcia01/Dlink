@@ -1,7 +1,10 @@
 import { useState, FormEvent } from "react";
+import axios from "axios";
+import { api } from "../services/api";
 
 interface LoginProps {
-  onLogin: (email: string) => void;
+  // 1. ADICIONANDO O "name" NA INTERFACE
+  onLogin: (email: string, role: string, name: string) => void;
   onCreateAccount: () => void;
 }
 
@@ -12,8 +15,9 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
   const [passwordError, setPasswordError] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setApiError("");
 
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     const passwordOk = password.length > 0;
@@ -23,19 +27,43 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
     if (!emailOk || !passwordOk) return;
 
-    onLogin(email.trim());
+    setIsLoading(true);
+
+    try {
+      const response = await api.post("/auth/login", {
+        email: email.trim(),
+        password,
+      });
+
+      const { token, user } = response.data;
+
+      localStorage.setItem("@DLink:token", token);
+      localStorage.setItem("@DLink:user", JSON.stringify(user));
+
+      // 2. ENVIANDO O NOME PARA O APP.TSX
+      onLogin(email.trim(), user.role, user.name);
+    } catch (error) {
+      if (
+        axios.isAxiosError<{ error?: string }>(error) &&
+        error.response?.data?.error
+      ) {
+        setApiError(error.response.data.error);
+      } else {
+        setApiError("Erro ao conectar com o servidor.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div id="login-screen">
       <div className="login-hero">
         <h1 className="brand-title">D-Link</h1>
-
         <p className="tagline">
           A plataforma de empregabilidade para a comunidade{" "}
           <strong>surda</strong>
         </p>
-
         <p className="hero-description">
           Conectamos pessoas surdas e com deficiência auditiva a empresas
           comprometidas com a inclusão, acessibilidade e diversidade. Um projeto{" "}
@@ -45,6 +73,19 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
 
       <div className="login-card">
         <form onSubmit={handleSubmit} noValidate>
+          {apiError && (
+            <div
+              style={{
+                color: "red",
+                marginBottom: "15px",
+                fontSize: "14px",
+                textAlign: "center",
+              }}
+            >
+              {apiError}
+            </div>
+          )}
+
           <div className={`field${emailError ? " invalid" : ""}`}>
             <label htmlFor="email">E-mail</label>
             <input
@@ -94,8 +135,8 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
             <a href="#">Esqueci minha senha</a>
           </div>
 
-          <button type="submit" className="btn-primary">
-            Entrar
+          <button type="submit" className="btn-primary" disabled={isLoading}>
+            {isLoading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
