@@ -94,14 +94,14 @@ model Application {
   id          String   @id @default(uuid())
   candidateId String   @map("candidate_id")
   jobId       String   @map("job_id")
-  status      String   @default("pending") @db.VarChar(20) // pending, approved, rejected
+  status      String   @default("pending") @db.VarChar(20)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  @@unique([candidateId, jobId]) // Impede candidaturas duplicadas
+  @@unique([candidateId, jobId]) 
   @@map("applications")
 }
 
