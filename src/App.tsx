@@ -2,8 +2,7 @@ import { useState } from "react";
 import Login from "./componentes/Login";
 import CriarConta from "./componentes/CriarConta";
 import Dashboard from "./componentes/Dashboard";
-import PainelEmpresa from "./componentes/PainelEmpresa";
-import ReactVLibras from "react-vlibras-plugin";
+import PainelEmpresa from "./componentes/PainelEmpresa"; // Vamos criar esse arquivo!
 import "./App.css";
 
 type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
@@ -26,30 +25,32 @@ function App() {
     return user ? JSON.parse(user).name : "";
   });
 
-  const [userEmail, setUserEmail] = useState(() => {
-    const user = localStorage.getItem("@DLink:user");
-    return user ? JSON.parse(user).email : "";
-  });
-
-  const handleLogin = (email: string, role: string, name: string) => {
+  // O Login agora precisa nos passar o "role" (perfil)
+  const handleLogin = (email: string, role: string) => {
     setUserEmail(email);
-    setUserName(name || email.split("@")[0] || "usuário");
+    setUserName(email.split("@")[0] || "usuário");
 
-    if (role === "company") setView("company_dashboard");
-    else setView("candidate_dashboard");
+    // Redireciona baseado no perfil
+    if (role === "company") {
+      setView("company_dashboard");
+    } else {
+      setView("candidate_dashboard");
+    }
   };
 
   const handleSignup = (name: string, email: string, role: string) => {
     setUserName(name || email.split("@")[0]);
     setUserEmail(email);
-    if (role === "company") setView("company_dashboard");
-    else setView("candidate_dashboard");
+
+    if (role === "company") {
+      setView("company_dashboard");
+    } else {
+      setView("candidate_dashboard");
+    }
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    setUserName("");
-    setUserEmail("");
+    localStorage.clear(); // Limpa o token ao sair
     setView("login");
   };
 
@@ -99,6 +100,10 @@ function App() {
       />
     );
   };
+
+  if (view === "company_dashboard") {
+    return <PainelEmpresa onLogout={handleLogout} />;
+  }
 
   return (
     <>

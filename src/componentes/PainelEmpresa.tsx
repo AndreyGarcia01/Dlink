@@ -1,44 +1,54 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import axios from "axios";
-import PerfilEmpresa from "./PerfilEmpresa";
-import type { Job } from "../types/job";
-import type { Application } from "../types/application";
+import PerfilEmpresa from "./PerfilEmpresa"; // <-- 1. Importação do Perfil
 
-// 1. ATUALIZAÇÃO DA INTERFACE
 interface PainelEmpresaProps {
-  userName: string;
-  userEmail: string;
   onLogout: () => void;
-  onUpdateName: (name: string) => void;
 }
 
-// 2. ATUALIZAÇÃO DOS PARÂMETROS
-function PainelEmpresa({
-  userName,
-  userEmail,
-  onLogout,
-  onUpdateName,
-}: PainelEmpresaProps) {
-  const initial = userName.charAt(0).toUpperCase(); // Letrinha da empresa
+interface Job {
+  id: string;
+  title: string;
+  status: string;
+  location: string;
+  workRegion: string;
+  _count: { applications: number };
+}
 
+interface Application {
+  id: string;
+  status: "pending" | "approved" | "rejected";
+  candidate: {
+    name: string;
+    email: string;
+    communicationPreference: string;
+    candidateProfile?: { bio: string; skills: string };
+  };
+}
+
+function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
+  // <-- 2. Adicionado o "perfil" nas opções de aba
   const [activeTab, setActiveTab] = useState<
     "vagas" | "criar" | "candidatos" | "perfil"
   >("vagas");
 
+  // Estados do formulário de vaga
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
   const [location, setLocation] = useState("");
   const [workRegion, setWorkRegion] = useState("Presencial");
 
+  // Estados de Vaga e Candidatos
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
   const [selectedJobTitle, setSelectedJobTitle] = useState("");
   const [candidates, setCandidates] = useState<Application[]>([]);
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
 
-  async function fetchJobs() {
+  async function carregarVagas() {
     try {
       const response = await api.get("/jobs/company/me");
       setJobs(response.data);
@@ -50,10 +60,10 @@ function PainelEmpresa({
   }
 
   useEffect(() => {
-    if (activeTab === "vagas") fetchJobs();
+    if (activeTab === "vagas") carregarVagas();
   }, [activeTab]);
 
-  const handleCreateJob = async (e: React.FormEvent) => {
+  const handleCriarVaga = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await api.post("/jobs", {
@@ -77,7 +87,7 @@ function PainelEmpresa({
     }
   };
 
-  const handleViewCandidates = async (jobId: string, jobTitle: string) => {
+  const verCandidatos = async (jobId: string, jobTitle: string) => {
     setSelectedJobTitle(jobTitle);
     setActiveTab("candidatos");
     setIsLoadingCandidates(true);
@@ -91,7 +101,7 @@ function PainelEmpresa({
     }
   };
 
-  const handleUpdateStatus = async (
+  const alterarStatus = async (
     applicationId: string,
     newStatus: "approved" | "rejected",
   ) => {
@@ -106,28 +116,6 @@ function PainelEmpresa({
       );
     } catch {
       alert("Erro ao atualizar status.");
-    }
-  };
-
-  const handleCloseJob = async (jobId: string) => {
-    if (
-      !window.confirm(
-        "Tem certeza que deseja encerrar esta vaga? Ela não aparecerá mais para os candidatos.",
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await api.patch(`/jobs/${jobId}/close`);
-      setJobs((prev) =>
-        prev.map((job) =>
-          job.id === jobId ? { ...job, status: "closed" } : job,
-        ),
-      );
-      alert("Vaga encerrada com sucesso!");
-    } catch {
-      alert("Erro ao encerrar a vaga.");
     }
   };
 
@@ -152,6 +140,8 @@ function PainelEmpresa({
           >
             Publicar Nova Vaga
           </button>
+
+          {/* 3. Novo Botão de Perfil no Menu Lateral */}
           <button
             className={`nav-item ${activeTab === "perfil" ? "active" : ""}`}
             onClick={() => setActiveTab("perfil")}
@@ -160,15 +150,7 @@ function PainelEmpresa({
           </button>
         </nav>
 
-        {/* 3. ATUALIZAÇÃO DO FOOTER DA SIDEBAR */}
         <div className="sidebar-footer">
-          <div className="sidebar-user">
-            <div className="sidebar-avatar">{initial}</div>
-            <div>
-              <div className="sidebar-user-name">{userName}</div>
-              <div className="sidebar-user-email">{userEmail}</div>
-            </div>
-          </div>
           <button className="sidebar-logout" onClick={onLogout}>
             Sair
           </button>
@@ -200,63 +182,19 @@ function PainelEmpresa({
                         📍 {job.location} • 💼 {job.workRegion}
                       </p>
                     </div>
-
-                    <div
-                      className="job-footer"
-                      style={{
-                        marginTop: "16px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "12px",
-                      }}
-                    >
-                      <span
+                    <div className="job-footer" style={{ marginTop: "16px" }}>
+                      <span>👥 {job._count.applications} candidato(s)</span>
+                      <button
+                        className="btn-apply"
                         style={{
-                          fontSize: "14px",
-                          color: "#666",
-                          fontWeight: "500",
+                          width: "auto",
+                          marginTop: 0,
+                          padding: "8px 16px",
                         }}
+                        onClick={() => verCandidatos(job.id, job.title)}
                       >
-                        👥 {job._count?.applications || 0} candidato(s)
-                      </span>
-
-                      <div
-                        style={{ display: "flex", gap: "8px", width: "100%" }}
-                      >
-                        <button
-                          className="btn-apply"
-                          style={{
-                            flex: 1,
-                            marginTop: 0,
-                            padding: "8px",
-                            fontSize: "13px",
-                            whiteSpace: "nowrap",
-                          }}
-                          onClick={() =>
-                            handleViewCandidates(job.id, job.title)
-                          }
-                        >
-                          Ver Candidatos
-                        </button>
-
-                        {job.status === "active" && (
-                          <button
-                            className="btn-secondary"
-                            style={{
-                              flex: 1,
-                              marginTop: 0,
-                              padding: "8px",
-                              fontSize: "13px",
-                              color: "#d32f2f",
-                              borderColor: "#d32f2f",
-                              whiteSpace: "nowrap",
-                            }}
-                            onClick={() => handleCloseJob(job.id)}
-                          >
-                            Encerrar
-                          </button>
-                        )}
-                      </div>
+                        Ver Candidatos
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -269,7 +207,7 @@ function PainelEmpresa({
         {activeTab === "criar" && (
           <div className="perfil-page" style={{ textAlign: "left" }}>
             <h1>Publicar Nova Vaga</h1>
-            <form onSubmit={handleCreateJob} className="perfil-card">
+            <form onSubmit={handleCriarVaga} className="perfil-card">
               <div className="field">
                 <label>Título</label>
                 <input
@@ -353,10 +291,8 @@ function PainelEmpresa({
                 {candidates.map((candidate) => (
                   <div key={candidate.id} className="job-card">
                     <div className="job-card-header">
-                      <h3>{candidate.candidate?.name}</h3>
-                      <p className="job-company">
-                        {candidate.candidate?.email}
-                      </p>
+                      <h3>{candidate.candidate.name}</h3>
+                      <p className="job-company">{candidate.candidate.email}</p>
                       <p
                         style={{
                           fontSize: "13px",
@@ -365,33 +301,11 @@ function PainelEmpresa({
                         }}
                       >
                         🗣️ Comunicação:{" "}
-                        {candidate.candidate?.communicationPreference ||
+                        {candidate.candidate.communicationPreference ||
                           "Não informada"}
                       </p>
-
-                      {candidate.requiresInterpreter && (
-                        <div
-                          style={{
-                            marginTop: "12px",
-                            padding: "10px",
-                            background: "#fff3e0",
-                            borderLeft: "4px solid #ef6c00",
-                            borderRadius: "4px",
-                          }}
-                        >
-                          <p
-                            style={{
-                              fontSize: "13px",
-                              color: "#ef6c00",
-                              fontWeight: "bold",
-                              margin: 0,
-                            }}
-                          >
-                            ⚠️ Necessita de intérprete de Libras
-                          </p>
-                        </div>
-                      )}
                     </div>
+
                     <div
                       style={{
                         marginTop: "20px",
@@ -414,7 +328,7 @@ function PainelEmpresa({
                             className="save-btn"
                             style={{ background: "#2e7d32", padding: "10px" }}
                             onClick={() =>
-                              handleUpdateStatus(candidate.id, "approved")
+                              alterarStatus(candidate.id, "approved")
                             }
                           >
                             Aprovar
@@ -423,7 +337,7 @@ function PainelEmpresa({
                             className="save-btn"
                             style={{ background: "#d32f2f", padding: "10px" }}
                             onClick={() =>
-                              handleUpdateStatus(candidate.id, "rejected")
+                              alterarStatus(candidate.id, "rejected")
                             }
                           >
                             Rejeitar
@@ -438,9 +352,8 @@ function PainelEmpresa({
           </div>
         )}
 
-        {activeTab === "perfil" && (
-          <PerfilEmpresa onUpdateName={onUpdateName} />
-        )}
+        {/* 4. RENDERIZAÇÃO DA ABA DE PERFIL DA EMPRESA */}
+        {activeTab === "perfil" && <PerfilEmpresa />}
       </main>
     </div>
   );
