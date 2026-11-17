@@ -11,12 +11,9 @@ interface LoginProps {
 function Login({ onLogin, onCreateAccount }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
-  const [apiError, setApiError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -123,7 +120,7 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label="Mostrar senha"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
                 👁
               </button>
