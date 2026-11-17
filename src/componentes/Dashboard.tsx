@@ -6,7 +6,9 @@ import axios from "axios";
 interface DashboardProps {
   userName: string;
   userEmail: string;
+  accountType?: "candidato" | "empresa";
   onLogout: () => void;
+  onUpdateName: (name: string) => void;
 }
 
 interface Job {

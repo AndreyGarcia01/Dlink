@@ -8,9 +8,22 @@ import "./App.css";
 type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
 
 function App() {
-  const [view, setView] = useState<View>("login");
-  const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [view, setView] = useState<View>(() => {
+    const token = localStorage.getItem("@DLink:token");
+    const user = localStorage.getItem("@DLink:user");
+    if (token && user) {
+      const parsedUser = JSON.parse(user);
+      return parsedUser.role === "company"
+        ? "company_dashboard"
+        : "candidate_dashboard";
+    }
+    return "login";
+  });
+
+  const [userName, setUserName] = useState(() => {
+    const user = localStorage.getItem("@DLink:user");
+    return user ? JSON.parse(user).name : "";
+  });
 
   // O Login agora precisa nos passar o "role" (perfil)
   const handleLogin = (email: string, role: string) => {
@@ -41,31 +54,62 @@ function App() {
     setView("login");
   };
 
-  if (view === "signup") {
+  const handleUpdateName = (newName: string) => {
+    setUserName(newName);
+    const user = localStorage.getItem("@DLink:user");
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      parsedUser.name = newName;
+      localStorage.setItem("@DLink:user", JSON.stringify(parsedUser));
+    }
+  };
+
+  const renderView = () => {
+    if (view === "signup") {
+      return (
+        <CriarConta
+          onCreated={handleSignup}
+          onBackToLogin={() => setView("login")}
+        />
+      );
+    }
+    if (view === "login") {
+      return (
+        <Login
+          onLogin={handleLogin}
+          onCreateAccount={() => setView("signup")}
+        />
+      );
+    }
+    if (view === "company_dashboard") {
+      return (
+        <PainelEmpresa
+          userName={userName}
+          userEmail={userEmail}
+          onLogout={handleLogout}
+          onUpdateName={handleUpdateName}
+        />
+      );
+    }
     return (
-      <CriarConta
-        onCreated={handleSignup}
-        onBackToLogin={() => setView("login")}
+      <Dashboard
+        userName={userName}
+        userEmail={userEmail}
+        onLogout={handleLogout}
+        onUpdateName={handleUpdateName}
       />
     );
-  }
-
-  if (view === "login") {
-    return (
-      <Login onLogin={handleLogin} onCreateAccount={() => setView("signup")} />
-    );
-  }
+  };
 
   if (view === "company_dashboard") {
     return <PainelEmpresa onLogout={handleLogout} />;
   }
 
   return (
-    <Dashboard
-      userName={userName}
-      userEmail={userEmail}
-      onLogout={handleLogout}
-    />
+    <>
+      {renderView()}
+      <ReactVLibras position="bottomRight" avatar="guga" />
+    </>
   );
 }
 
