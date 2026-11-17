@@ -2,7 +2,8 @@ import { useState } from "react";
 import Login from "./componentes/Login";
 import CriarConta from "./componentes/CriarConta";
 import Dashboard from "./componentes/Dashboard";
-import PainelEmpresa from "./componentes/PainelEmpresa"; // Vamos criar esse arquivo!
+import PainelEmpresa from "./componentes/PainelEmpresa";
+import ReactVLibras from "react-vlibras-plugin";
 import "./App.css";
 
 type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
@@ -54,16 +55,7 @@ function App() {
     setView("login");
   };
 
-  const handleUpdateName = (newName: string) => {
-    setUserName(newName);
-    const user = localStorage.getItem("@DLink:user");
-    if (user) {
-      const parsedUser = JSON.parse(user);
-      parsedUser.name = newName;
-      localStorage.setItem("@DLink:user", JSON.stringify(parsedUser));
-    }
-  };
-
+  // Função auxiliar para decidir qual tela mostrar
   const renderView = () => {
     if (view === "signup") {
       return (
@@ -73,6 +65,7 @@ function App() {
         />
       );
     }
+
     if (view === "login") {
       return (
         <Login
@@ -81,33 +74,26 @@ function App() {
         />
       );
     }
+
     if (view === "company_dashboard") {
-      return (
-        <PainelEmpresa
-          userName={userName}
-          userEmail={userEmail}
-          onLogout={handleLogout}
-          onUpdateName={handleUpdateName}
-        />
-      );
+      return <PainelEmpresa onLogout={handleLogout} />;
     }
+
     return (
       <Dashboard
         userName={userName}
         userEmail={userEmail}
         onLogout={handleLogout}
-        onUpdateName={handleUpdateName}
       />
     );
   };
 
-  if (view === "company_dashboard") {
-    return <PainelEmpresa onLogout={handleLogout} />;
-  }
-
   return (
     <>
+      {/* Renderiza a tela atual (Login, Dashboard ou Painel) */}
       {renderView()}
+
+      {/* O widget do VLibras fica fixo no canto em todas as telas */}
       <ReactVLibras position="bottomRight" avatar="guga" />
     </>
   );
