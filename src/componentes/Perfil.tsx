@@ -17,8 +17,8 @@ function Perfil() {
     setNovaHabilidade("");
   };
 
-  const handleRemoveSkill = (index: number) => {
-    setSkills((prev) => prev.filter((_, i) => i !== index));
+  const removerHabilidade = (index: number) => {
+    setHabilidades((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -37,8 +37,8 @@ function Perfil() {
             <input
               id="perfil-nome"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
               placeholder="Seu nome completo"
             />
           </div>
@@ -49,8 +49,8 @@ function Perfil() {
             <label htmlFor="perfil-perda">Grau de perda auditiva</label>
             <select
               id="perfil-perda"
-              value={hearingLossLevel}
-              onChange={(e) => setHearingLossLevel(e.target.value)}
+              value={perdaAuditiva}
+              onChange={(e) => setPerdaAuditiva(e.target.value)}
             >
               <option>Leve</option>
               <option>Moderada</option>
@@ -64,8 +64,8 @@ function Perfil() {
             </label>
             <select
               id="perfil-comunicacao"
-              value={communicationPreference}
-              onChange={(e) => setCommunicationPreference(e.target.value)}
+              value={comunicacao}
+              onChange={(e) => setComunicacao(e.target.value)}
             >
               <option>Libras</option>
               <option>Leitura labial</option>
@@ -81,8 +81,8 @@ function Perfil() {
         <textarea
           className="perfil-textarea"
           placeholder="Conte um pouco sobre você, suas habilidades e objetivos profissionais..."
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
+          value={resumo}
+          onChange={(e) => setResumo(e.target.value)}
         />
       </div>
 
@@ -92,35 +92,35 @@ function Perfil() {
           <input
             type="text"
             placeholder="Ex: JavaScript, Libras, Excel..."
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
+            value={novaHabilidade}
+            onChange={(e) => setNovaHabilidade(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                handleAddSkill();
+                adicionarHabilidade();
               }
             }}
           />
           <button
             type="button"
             className="skill-add-btn"
-            onClick={handleAddSkill}
+            onClick={adicionarHabilidade}
             aria-label="Adicionar habilidade"
           >
             +
           </button>
         </div>
 
-        {skills.length === 0 ? (
+        {habilidades.length === 0 ? (
           <p className="perfil-empty-hint">Adicione suas habilidades acima.</p>
         ) : (
           <div className="skill-tags">
-            {skills.map((h, i) => (
+            {habilidades.map((h, i) => (
               <span key={`${h}-${i}`} className="skill-tag">
                 {h}
                 <button
                   type="button"
-                  onClick={() => handleRemoveSkill(i)}
+                  onClick={() => removerHabilidade(i)}
                   aria-label={`Remover ${h}`}
                 >
                   ×
@@ -131,19 +131,30 @@ function Perfil() {
         )}
       </div>
 
-      {/* 5. Inputs diretos para Experiência */}
       <div className="perfil-card">
-        <h3>Experiência profissional</h3>
-        <textarea
-          className="perfil-textarea"
-          placeholder="Descreva suas experiências profissionais anteriores..."
-          value={experience}
-          onChange={(e) => setExperience(e.target.value)}
-        />
+        <div className="perfil-card-header">
+          <h3>Experiência profissional</h3>
+          <button type="button" className="add-link">
+            + Adicionar
+          </button>
+        </div>
+        <p className="perfil-empty-hint">
+          Nenhuma experiência adicionada ainda.
+        </p>
+      </div>
+
+      <div className="perfil-card">
+        <div className="perfil-card-header">
+          <h3>Formação acadêmica</h3>
+          <button type="button" className="add-link">
+            + Adicionar
+          </button>
+        </div>
+        <p className="perfil-empty-hint">Nenhuma formação adicionada ainda.</p>
       </div>
 
       <button type="button" className="save-btn">
-        💾 Salvar alterações
+        Salvar alterações
       </button>
     </div>
   );
