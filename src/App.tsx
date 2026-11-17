@@ -9,9 +9,22 @@ import "./App.css";
 type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
 
 function App() {
-  const [view, setView] = useState<View>("login");
-  const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [view, setView] = useState<View>(() => {
+    const token = localStorage.getItem("@DLink:token");
+    const user = localStorage.getItem("@DLink:user");
+    if (token && user) {
+      const parsedUser = JSON.parse(user);
+      return parsedUser.role === "company"
+        ? "company_dashboard"
+        : "candidate_dashboard";
+    }
+    return "login";
+  });
+
+  const [userName, setUserName] = useState(() => {
+    const user = localStorage.getItem("@DLink:user");
+    return user ? JSON.parse(user).name : "";
+  });
 
   // O Login agora precisa nos passar o "role" (perfil)
   const handleLogin = (email: string, role: string) => {
