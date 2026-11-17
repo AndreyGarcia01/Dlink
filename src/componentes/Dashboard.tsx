@@ -4,11 +4,85 @@ import Perfil from "./Perfil"; // Importando a tela de perfil que fizemos
 interface DashboardProps {
   userName: string;
   userEmail: string;
+  accountType?: "candidato" | "empresa";
   onLogout: () => void;
+  onUpdateName: (name: string) => void;
 }
 
-function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
+type Page = "inicio" | "candidaturas" | "perfil";
+
+function Dashboard({
+  userName,
+  userEmail,
+  accountType = "candidato",
+  onLogout,
+}: DashboardProps) {
+  const [page, setPage] = useState<Page>("inicio");
   const initial = userName.charAt(0).toUpperCase();
+  const [activeTab, setActiveTab] = useState<
+    "inicio" | "candidaturas" | "perfil"
+  >("inicio");
+
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
+  const [myApplications, setMyApplications] = useState<Application[]>([]);
+
+  useEffect(() => {
+    async function carregarDados() {
+      try {
+        const [jobsRes, appsRes] = await Promise.all([
+          api.get("/jobs"),
+          api.get("/applications/me"),
+        ]);
+
+        setJobs(jobsRes.data);
+
+        const appliedIds = jobsRes.data
+          .filter((job: Job) => job.applications && job.applications.length > 0)
+          .map((job: Job) => job.id);
+        setAppliedJobs(appliedIds);
+
+        setMyApplications(appsRes.data);
+      } catch (error) {
+        console.error("Erro ao carregar dados", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    carregarDados();
+  }, []);
+
+  async function handleApply(jobId: string) {
+    const precisaInterprete = window.confirm(
+      "Você precisará de um intérprete de Libras na entrevista ou no primeiro contato?\n\nClique em 'OK' para SIM ou 'Cancelar' para NÃO.",
+    );
+
+    try {
+      await api.post(`/jobs/${jobId}/apply`, {
+        requiresInterpreter: precisaInterprete,
+      });
+
+      setAppliedJobs((prev) => [...prev, jobId]);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        if (
+          error.response.data.error === "Você já se candidatou a esta vaga."
+        ) {
+          setAppliedJobs((prev) => [...prev, jobId]);
+        } else {
+          alert(error.response.data.error);
+        }
+      } else {
+        alert("Erro ao se candidatar.");
+      }
+    }
+  }
+
+  const goTo = (e: React.MouseEvent, destino: Page) => {
+    e.preventDefault();
+    setPage(destino);
+  };
 
   // Estado para controlar qual aba está ativa
   const [activeTab, setActiveTab] = useState<
@@ -22,7 +96,6 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
           <div className="mini-logo">D</div>
           <span className="mini-logo-text">D-Link</span>
         </div>
-
         <nav className="sidebar-nav">
           {/* BOTÃO INÍCIO */}
           <button
@@ -90,7 +163,6 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
             Meu Perfil
           </button>
         </nav>
-
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <div className="sidebar-avatar">{initial}</div>
@@ -100,20 +172,6 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
             </div>
           </div>
           <button type="button" className="sidebar-logout" onClick={onLogout}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
             Sair
           </button>
         </div>
