@@ -51,7 +51,7 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
 
     try {
       // Chamada real para o backend salvar no banco Neon
-      const response = await api.post("/auth/register", {
+      await api.post("/auth/register", {
         name: nome.trim(),
         email: email.trim(),
         password,
@@ -61,9 +61,6 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
         cnpj: tipo === "empresa" ? cnpj : null,
         sector: tipo === "empresa" ? setor : null,
       });
-
-      const { token } = response.data;
-      localStorage.setItem("@DLink:token", token);
 
       // Se deu certo, avisa o App.tsx (passando o role para ele redirecionar)
       onCreated(nome.trim(), email.trim(), role);

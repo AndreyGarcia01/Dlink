@@ -6,18 +6,14 @@ import {
 } from "../middlewares/authMiddleware";
 
 const router = Router();
-
-// Todas as rotas aqui exigem que o usuário esteja logado
 router.use(ensureAuthenticated);
 
 // BUSCAR PERFIL
 router.get("/me", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-
-    if (!userId) {
+    if (!userId)
       return res.status(401).json({ error: "Usuário não autenticado." });
-    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -33,37 +29,47 @@ router.get("/me", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ATUALIZAR PERFIL
+// ATUALIZAR PERFIL (Agora aceita campos de empresa também)
 router.put("/me", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-
-    // AQUI ESTÁ A CORREÇÃO DO ERRO DO "create"
-    if (!userId) {
+    if (!userId)
       return res.status(401).json({ error: "Usuário não autenticado." });
-    }
 
-    const { name, hearingLossLevel, communicationPreference, bio, skills } =
-      req.body;
+    const {
+      name,
+      hearingLossLevel,
+      communicationPreference,
+      bio,
+      skills,
+      cnpj,
+      companyDescription,
+      sector,
+    } = req.body;
 
-    // 1. Atualiza os dados básicos
+    // Atualiza os dados básicos do usuário (sejam de candidato ou empresa)
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { name, hearingLossLevel, communicationPreference },
+      data: {
+        name,
+        hearingLossLevel,
+        communicationPreference,
+        cnpj,
+        companyDescription,
+        sector,
+      },
     });
 
-    // 2. Atualiza ou cria o perfil (bio e habilidades)
+    // Se for candidato e enviou bio/skills, atualiza o perfil dele
     if (bio || skills) {
       const skillsString = Array.isArray(skills) ? skills.join(", ") : skills;
-
       await prisma.candidateProfile.upsert({
         where: { userId: userId },
         update: { bio, skills: skillsString },
-        create: { userId: userId, bio, skills: skillsString }, // Agora o TS sabe que o userId não é undefined
+        create: { userId: userId, bio, skills: skillsString },
       });
     }
 
-    // 3. Retorna o usuário atualizado
     return res.json({
       message: "Perfil atualizado com sucesso!",
       user: updatedUser,
