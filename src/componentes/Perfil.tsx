@@ -1,109 +1,25 @@
-import { useState, useEffect } from "react";
-import { api } from "../services/api";
+import { useState } from "react";
 
-// 1. Adicionando a interface para receber a função do Dashboard
-interface PerfilProps {
-  onUpdateName?: (name: string) => void;
-}
+function Perfil() {
+  const [nome, setNome] = useState("");
+  const [perdaAuditiva, setPerdaAuditiva] = useState("Profundo");
+  const [comunicacao, setComunicacao] = useState("Libras");
+  const [resumo, setResumo] = useState("");
+  const [novaHabilidade, setNovaHabilidade] = useState("");
+  const [habilidades, setHabilidades] = useState<string[]>([]);
 
-function Perfil({ onUpdateName }: PerfilProps) {
-  const [name, setName] = useState("");
-  const [hearingLossLevel, setHearingLossLevel] = useState("Profundo");
-  const [communicationPreference, setCommunicationPreference] =
-    useState("Libras");
-  const [bio, setBio] = useState("");
+  const initial = nome.charAt(0).toUpperCase() || "U";
 
-  // 2. Novos estados para Experiência e Formação
-  const [experience, setExperience] = useState("");
-  const [education, setEducation] = useState("");
-
-  const [newSkill, setNewSkill] = useState("");
-  const [skills, setSkills] = useState<string[]>([]);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false); // 3. Estado do botão verde
-
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const response = await api.get("/profile/me");
-        const data = response.data;
-
-        setName(data.name || "");
-        setHearingLossLevel(data.hearingLossLevel || "Profundo");
-        setCommunicationPreference(data.communicationPreference || "Libras");
-
-        if (data.candidateProfile) {
-          setBio(data.candidateProfile.bio || "");
-          // Buscando experiência e formação do banco
-          setExperience(data.candidateProfile.experience || "");
-          setEducation(data.candidateProfile.education || "");
-
-          const skillsArray = data.candidateProfile.skills
-            ? data.candidateProfile.skills
-                .split(",")
-                .map((s: string) => s.trim())
-            : [];
-          setSkills(skillsArray);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar perfil", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchProfile();
-  }, []);
-
-  const handleAddSkill = () => {
-    const value = newSkill.trim();
-    if (!value) return;
-    setSkills((prev) => [...prev, value]);
-    setNewSkill("");
+  const adicionarHabilidade = () => {
+    const valor = novaHabilidade.trim();
+    if (!valor) return;
+    setHabilidades((prev) => [...prev, valor]);
+    setNovaHabilidade("");
   };
 
   const handleRemoveSkill = (index: number) => {
     setSkills((prev) => prev.filter((_, i) => i !== index));
   };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    setIsSaved(false);
-    try {
-      await api.put("/profile/me", {
-        name,
-        hearingLossLevel,
-        communicationPreference,
-        bio,
-        skills,
-        experience, // Enviando para o backend
-        education, // Enviando para o backend
-      });
-
-      // Atualiza o nome na barra lateral esquerda imediatamente
-      if (onUpdateName) onUpdateName(name);
-
-      // 4. Ativa o botão verde por 3 segundos
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 3000);
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao salvar o perfil.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const initial = name.charAt(0).toUpperCase() || "U";
-
-  if (isLoading) {
-    return (
-      <div style={{ padding: "20px", textAlign: "center" }}>
-        Carregando perfil...
-      </div>
-    );
-  }
 
   return (
     <div className="perfil-page">
@@ -226,29 +142,8 @@ function Perfil({ onUpdateName }: PerfilProps) {
         />
       </div>
 
-      {/* 6. Inputs diretos para Formação */}
-      <div className="perfil-card">
-        <h3>Formação acadêmica</h3>
-        <textarea
-          className="perfil-textarea"
-          placeholder="Descreva sua formação acadêmica (cursos, faculdades...)"
-          value={education}
-          onChange={(e) => setEducation(e.target.value)}
-        />
-      </div>
-
-      {/* BOTÃO COM FEEDBACK VISUAL VERDE */}
-      <button
-        type="button"
-        className={`save-btn ${isSaved ? "saved" : ""}`}
-        onClick={handleSave}
-        disabled={isSaving || isSaved}
-      >
-        {isSaving
-          ? "Salvando..."
-          : isSaved
-            ? "Salvo com sucesso! ✅"
-            : "Salvar alterações"}
+      <button type="button" className="save-btn">
+        💾 Salvar alterações
       </button>
     </div>
   );
