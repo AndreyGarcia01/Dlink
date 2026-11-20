@@ -1,0 +1,96 @@
+# CD do D-Link: quando o CI passa na main, entra na EC2 por SSH e roda o
+# deploy/deploy.sh (baixa o código, instala, gera o site e reinicia a API no PM2).
+#
+# Também dá para rodar na mão: aba Actions > Deploy > Run workflow.
+# Se a EC2 estiver pausada, o deploy falha com aviso; ligue a EC2 e rode na mão.
+#
+# Segredos necessários (Settings > Secrets and variables > Actions > Secrets):
+#   EC2_HOST     -> deaflink.duckdns.org (ou o Elastic IP)
+#   EC2_SSH_KEY  -> conteúdo inteiro do arquivo deaflink.pem
+
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Nunca dois deploys ao mesmo tempo. Um novo espera o anterior terminar.
+concurrency:
+  group: deploy-producao
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy na EC2
+    # Só faz deploy se o CI passou (ou se foi disparado na mão a partir da main)
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ubuntu
+      # Commit exato que o CI testou (ou o último da main, se for na mão)
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+
+      - name: Conferir segredos
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          if [ -z "$EC2_HOST" ] || [ -z "$EC2_SSH_KEY" ]; then
+            echo "::error::Configure os segredos EC2_HOST e EC2_SSH_KEY em Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Conferir se a EC2 está ligada
+        run: |
+          if ! timeout 15 bash -c "</dev/tcp/$EC2_HOST/22" 2> /dev/null; then
+            echo "::error::Não consegui conectar na EC2 ($EC2_HOST). Ela está pausada? Ligue a EC2 e rode de novo em Actions > Deploy > Run workflow."
+            exit 1
+          fi
+
+      - name: Preparar chave SSH
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -T 15 -H "$EC2_HOST" >> ~/.ssh/known_hosts 2> /dev/null
+
+      - name: Deploy (roda deploy/deploy.sh na EC2)
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 \
+            "$EC2_USER@$EC2_HOST" "bash -s -- $SHA" < deploy/deploy.sh
+
+      - name: Conferir o site
+        run: |
+          curl -fsS --retry 5 --retry-delay 3 "https://$EC2_HOST/api/health"
+          echo
+          curl -fsS -o /dev/null "https://$EC2_HOST/"
+          echo "Site e API respondendo."
+
+      - name: Apagar a chave
+        if: ${{ always() }}
+        run: rm -f ~/.ssh/deploy_key
+
+      - name: Resumo
+        if: ${{ success() }}
+        run: |
+          {
+            echo "### Deploy concluído"
+            echo "- Commit: \`${SHA::7}\`"
+            echo "- https://$EC2_HOST"
+          } >> "$GITHUB_STEP_SUMMARY"
