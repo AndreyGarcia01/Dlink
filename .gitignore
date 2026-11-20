@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .env
 *.pem
+*.tsbuildinfo
+# Relatórios de teste
+coverage

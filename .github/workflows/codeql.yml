@@ -1,0 +1,39 @@
+# Análise de segurança do código com CodeQL (JavaScript/TypeScript).
+# Os alertas aparecem em Security > Code scanning no GitHub.
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * 1" # toda segunda-feira, para pegar vulnerabilidades novas
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analisar:
+    name: Analisar JavaScript/TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      security-events: write # para publicar os alertas
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Iniciar CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      - name: Analisar
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: "/language:javascript-typescript"

@@ -31,10 +31,12 @@ function App() {
     return user ? JSON.parse(user).email : "";
   });
 
+  // O Login agora precisa nos passar o "role" (perfil)
   const handleLogin = (email: string, role: string) => {
     setUserEmail(email);
     setUserName(email.split("@")[0] || "usuário");
 
+    // Redireciona baseado no perfil
     if (role === "company") {
       setView("company_dashboard");
     } else {
@@ -54,10 +56,11 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.clear(); // Limpa o token ao sair
     setView("login");
   };
 
+  // Função auxiliar para decidir qual tela mostrar
   const renderView = () => {
     if (view === "signup") {
       return (
@@ -93,10 +96,10 @@ function App() {
 
   return (
     <>
-      {}
+      {/* Renderiza a tela atual (Login, Dashboard ou Painel) */}
       {renderView()}
 
-      {}
+      {/* O widget do VLibras fica fixo no canto em todas as telas */}
       <ReactVLibras position="bottomRight" avatar="guga" />
     </>
   );
