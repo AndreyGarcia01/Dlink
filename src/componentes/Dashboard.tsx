@@ -22,7 +22,6 @@ interface Job {
   applications?: { id: string }[];
 }
 
-// Adiciona a interface da Candidatura (FORA do componente)
 interface Application {
   id: string;
   status: "pending" | "approved" | "rejected";
@@ -32,7 +31,6 @@ interface Application {
   };
 }
 
-// AQUI COMEÇA A FUNÇÃO DO COMPONENTE
 function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
   const initial = userName.charAt(0).toUpperCase();
   const [activeTab, setActiveTab] = useState<
@@ -43,13 +41,11 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
 
-  // O ESTADO DA CANDIDATURA TEM QUE FICAR AQUI DENTRO!
   const [myApplications, setMyApplications] = useState<Application[]>([]);
 
   useEffect(() => {
     async function carregarDados() {
       try {
-        // Busca as vagas e as candidaturas juntas
         const [jobsRes, appsRes] = await Promise.all([
           api.get("/jobs"),
           api.get("/applications/me"),
@@ -62,7 +58,7 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
           .map((job: Job) => job.id);
         setAppliedJobs(appliedIds);
 
-        setMyApplications(appsRes.data); // <-- Usando a variável aqui!
+        setMyApplications(appsRes.data);
       } catch (error) {
         console.error("Erro ao carregar dados", error);
       } finally {
@@ -72,17 +68,14 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
     carregarDados();
   }, []);
 
-  // ... o resto do seu código (handleApply, return, etc.)
-
   async function handleApply(jobId: string) {
-    // Pergunta acessível para o candidato
     const precisaInterprete = window.confirm(
       "Você precisará de um intérprete de Libras na entrevista ou no primeiro contato?\n\nClique em 'OK' para SIM ou 'Cancelar' para NÃO.",
     );
 
     try {
       await api.post(`/jobs/${jobId}/apply`, {
-        requiresInterpreter: precisaInterprete, // <-- Envia para o backend
+        requiresInterpreter: precisaInterprete,
       });
 
       setAppliedJobs((prev) => [...prev, jobId]);
@@ -104,7 +97,7 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
   return (
     <div className="dashboard-layout">
       <aside className="dashboard-sidebar">
-        {/* ... (código da sidebar mantido igual) ... */}
+        {}
         <div className="sidebar-logo">
           <div className="mini-logo">D</div>
           <span className="mini-logo-text">D-Link</span>
@@ -175,7 +168,6 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
             ) : (
               <div className="jobs-grid">
                 {jobs.map((job) => {
-                  // Verifica se já se candidatou a essa vaga específica
                   const hasApplied = appliedJobs.includes(job.id);
 
                   return (
@@ -191,7 +183,7 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
                         <span>💼 {job.workRegion}</span>
                       </div>
 
-                      {/* BOTÃO INTELIGENTE E ACESSÍVEL */}
+                      {}
                       <button
                         className={`btn-apply ${hasApplied ? "applied" : ""}`}
                         onClick={() => !hasApplied && handleApply(job.id)}

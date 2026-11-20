@@ -12,7 +12,6 @@ body {
   color: #333;
 }
 
-/* HEADER */
 header {
   background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
   padding: 15px 0;
@@ -87,7 +86,6 @@ header {
   background: #f0f0f0;
 }
 
-/* MAIN CONTAINER */
 .container {
   max-width: 1200px;
   margin: 20px auto;
@@ -97,7 +95,6 @@ header {
   padding: 0 20px;
 }
 
-/* SIDEBAR ESQUERDA */
 .sidebar-left {
   background: white;
   border-radius: 8px;
@@ -155,7 +152,6 @@ header {
   font-size: 16px;
 }
 
-/* FEED CENTRAL */
 .main-feed {
   background: white;
   border-radius: 8px;
@@ -216,7 +212,6 @@ header {
   color: #0077b6;
 }
 
-/* POSTS */
 .post {
   border-bottom: 1px solid #e0e0e0;
   padding: 20px;
@@ -291,7 +286,6 @@ header {
   color: #0077b6;
 }
 
-/* SIDEBAR DIREITA */
 .sidebar-right {
   background: white;
   border-radius: 8px;
@@ -336,7 +330,6 @@ header {
   color: #666;
 }
 
-/* RESPONSIVO */
 @media (max-width: 768px) {
   .container {
     grid-template-columns: 1fr;

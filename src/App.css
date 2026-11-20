@@ -38,7 +38,6 @@ button {
   cursor: pointer;
 }
 
-/* ===================== LOGIN SCREEN ===================== */
 #login-screen {
   min-height: 100vh;
   background: linear-gradient(135deg, #133c4a 0%, #3e8496 100%);
@@ -224,7 +223,6 @@ button {
   }
 }
 
-/* ===================== SIGNUP SCREEN ===================== */
 .signup-screen {
   min-height: 100vh;
   background: linear-gradient(135deg, #133c4a 0%, #3e8496 100%);
@@ -376,7 +374,6 @@ button {
   }
 }
 
-/* ===================== APP / FEED ===================== */
 header {
   background: var(--white);
   border-bottom: 1px solid var(--line);
@@ -628,7 +625,6 @@ header {
   }
 }
 
-/* ===================== DASHBOARD ===================== */
 .dashboard-layout {
   min-height: 100vh;
   display: flex;
@@ -826,11 +822,10 @@ header {
   color: var(--text-muted);
 }
 
-/* ===================== TELA DE PERFIL ===================== */
 .perfil-page {
   max-width: 800px;
   margin: 0 auto;
-  text-align: center; /* Centraliza o título e o subtítulo */
+  text-align: center;
 }
 
 .perfil-card {
@@ -888,7 +883,6 @@ header {
   color: var(--ink);
 }
 
-/* Estilo para os inputs e selects do perfil */
 .perfil-page .field input,
 .perfil-page .field select,
 .perfil-textarea,
@@ -925,7 +919,6 @@ header {
   gap: 20px;
 }
 
-/* Habilidades */
 .skill-add-row {
   display: flex;
   gap: 10px;
@@ -979,7 +972,6 @@ header {
   align-items: center;
 }
 
-/* Botão Salvar Perfil */
 .save-btn {
   width: 100%;
   height: 46px;
@@ -997,7 +989,6 @@ header {
   background: var(--primary-dark);
 }
 
-/* Botões de Adicionar (Experiência e Formação) */
 .add-link {
   background: var(--primary);
   color: var(--white);
@@ -1057,7 +1048,7 @@ header {
     padding: 24px 20px;
   }
 }
-/* ===================== CARDS DE VAGAS ===================== */
+
 .jobs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1116,7 +1107,7 @@ header {
   color: var(--text-muted);
   line-height: 1.5;
   margin-bottom: 20px;
-  flex: 1; /* Empurra o rodapé para baixo */
+  flex: 1;
 }
 
 .job-footer {
@@ -1153,16 +1144,15 @@ header {
 }
 
 .btn-apply:active {
-  transform: scale(0.98); /* Efeito de apertar o botão */
+  transform: scale(0.98);
 }
 
-/* ESTILO DE SUCESSO (VERDE E ACESSÍVEL) */
 .btn-apply.applied {
-  background-color: #2e7d32; /* Verde escuro para alto contraste */
+  background-color: #2e7d32;
   color: #ffffff;
   cursor: default;
-  pointer-events: none; /* Impede novos cliques */
-  animation: pop 0.3s ease-out; /* Animaçãozinha de "estalo" */
+  pointer-events: none;
+  animation: pop 0.3s ease-out;
 }
 
 @keyframes pop {

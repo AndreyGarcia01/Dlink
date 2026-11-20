@@ -8,7 +8,6 @@ import {
 const router = Router();
 router.use(ensureAuthenticated);
 
-// BUSCAR PERFIL
 router.get("/me", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -29,7 +28,6 @@ router.get("/me", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ATUALIZAR PERFIL (Agora aceita campos de empresa também)
 router.put("/me", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -47,7 +45,6 @@ router.put("/me", async (req: AuthRequest, res: Response) => {
       sector,
     } = req.body;
 
-    // Atualiza os dados básicos do usuário (sejam de candidato ou empresa)
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
@@ -60,7 +57,6 @@ router.put("/me", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Se for candidato e enviou bio/skills, atualiza o perfil dele
     if (bio || skills) {
       const skillsString = Array.isArray(skills) ? skills.join(", ") : skills;
       await prisma.candidateProfile.upsert({

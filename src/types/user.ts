@@ -1,6 +1,5 @@
-// Tipos de perfil padronizados com o backend
 export type AccountType = "candidate" | "company";
-export type SignupType = "candidato" | "empresa"; // Usado no formulário de cadastro
+export type SignupType = "candidato" | "empresa";
 
 export interface User {
   id: string;

@@ -26,12 +26,15 @@ function App() {
     return user ? JSON.parse(user).name : "";
   });
 
-  // O Login agora precisa nos passar o "role" (perfil)
+  const [userEmail, setUserEmail] = useState(() => {
+    const user = localStorage.getItem("@DLink:user");
+    return user ? JSON.parse(user).email : "";
+  });
+
   const handleLogin = (email: string, role: string) => {
     setUserEmail(email);
     setUserName(email.split("@")[0] || "usuário");
 
-    // Redireciona baseado no perfil
     if (role === "company") {
       setView("company_dashboard");
     } else {
@@ -51,11 +54,10 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.clear(); // Limpa o token ao sair
+    localStorage.clear();
     setView("login");
   };
 
-  // Função auxiliar para decidir qual tela mostrar
   const renderView = () => {
     if (view === "signup") {
       return (
@@ -84,16 +86,17 @@ function App() {
         userName={userName}
         userEmail={userEmail}
         onLogout={handleLogout}
+        onUpdateName={setUserName}
       />
     );
   };
 
   return (
     <>
-      {/* Renderiza a tela atual (Login, Dashboard ou Painel) */}
+      {}
       {renderView()}
 
-      {/* O widget do VLibras fica fixo no canto em todas as telas */}
+      {}
       <ReactVLibras position="bottomRight" avatar="guga" />
     </>
   );
