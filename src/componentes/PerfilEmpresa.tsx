@@ -10,7 +10,6 @@ function PerfilEmpresa() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Busca os dados do banco assim que a tela abre
   useEffect(() => {
     async function carregarPerfil() {
       try {
@@ -30,7 +29,6 @@ function PerfilEmpresa() {
     carregarPerfil();
   }, []);
 
-  // Salva as alterações no banco
   const salvarAlteracoes = async () => {
     setIsSaving(true);
     try {
@@ -42,7 +40,6 @@ function PerfilEmpresa() {
       });
       alert("Perfil da empresa salvo com sucesso!");
     } catch {
-      // <-- OLHA AQUI: Sem o (error)
       alert("Erro ao salvar o perfil da empresa.");
     } finally {
       setIsSaving(false);

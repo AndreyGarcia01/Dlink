@@ -8,5 +8,5 @@ export interface Job {
   status: string;
   company: { name: string };
   applications?: { id: string }[];
-  _count?: { applications: number }; // Usado no painel da empresa
+  _count?: { applications: number };
 }

@@ -3,7 +3,6 @@ import axios from "axios";
 import { api } from "../services/api";
 
 interface CriarContaProps {
-  // Mudança 1: O role agora é obrigatório para avisar o App.tsx
   onCreated: (name: string, email: string, role: string) => void;
   onBackToLogin: () => void;
 }
@@ -12,21 +11,17 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
   const [tipo, setTipo] = useState<"candidato" | "empresa">("candidato");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Estados para os campos
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Campos de candidato
   const [perdaAuditiva, setPerdaAuditiva] = useState("Profundo");
   const [comunicacao, setComunicacao] = useState("Libras");
 
-  // Campos de empresa
   const [cnpj, setCnpj] = useState("");
   const [setor, setSetor] = useState("");
 
-  // Estados para controle da API
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,7 +29,6 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
     e.preventDefault();
     setApiError("");
 
-    // Validação básica de senha
     if (password !== confirmPassword) {
       setApiError("As senhas não coincidem.");
       return;
@@ -46,11 +40,9 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
 
     setIsLoading(true);
 
-    // Define o role baseado no tipo selecionado
     const role = tipo === "candidato" ? "candidate" : "company";
 
     try {
-      // Chamada real para o backend salvar no banco Neon
       await api.post("/auth/register", {
         name: nome.trim(),
         email: email.trim(),
@@ -62,7 +54,6 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
         sector: tipo === "empresa" ? setor : null,
       });
 
-      // Se deu certo, avisa o App.tsx (passando o role para ele redirecionar)
       onCreated(nome.trim(), email.trim(), role);
     } catch (error) {
       if (
@@ -89,7 +80,7 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
       <div className="signup-card">
         <h2>Criar conta</h2>
 
-        {/* Mensagem de erro caso o backend recuse (ex: e-mail já em uso) */}
+        {}
         {apiError && (
           <div
             style={{

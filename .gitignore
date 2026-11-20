@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+*.pem
+*.tsbuildinfo
+# Relatórios de teste
+coverage

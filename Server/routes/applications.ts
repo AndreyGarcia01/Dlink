@@ -8,7 +8,6 @@ import {
 const router = Router();
 router.use(ensureAuthenticated);
 
-// ATUALIZAR STATUS DA CANDIDATURA (Aprovar ou Rejeitar)
 router.put("/:id/status", async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== "company") {
@@ -18,7 +17,7 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
     }
 
     const applicationId = String(req.params.id);
-    const { status } = req.body; // 'approved' ou 'rejected'
+    const { status } = req.body;
 
     if (!["approved", "rejected"].includes(status)) {
       return res.status(400).json({ error: "Status inválido." });
@@ -39,7 +38,6 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// BUSCAR CANDIDATURAS DO CANDIDATO LOGADO
 router.get("/me", async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== "candidate") {

@@ -33,14 +33,12 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
     "vagas" | "criar" | "candidatos" | "perfil"
   >("vagas");
 
-  // Estados do formulário de vaga
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
   const [location, setLocation] = useState("");
   const [workRegion, setWorkRegion] = useState("Presencial");
 
-  // Estados de Vaga e Candidatos
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -180,7 +178,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
       </aside>
 
       <main className="dashboard-main">
-        {/* ABA DE VAGAS */}
+        {}
         {activeTab === "vagas" && (
           <div>
             <h1>Minhas Vagas</h1>
@@ -205,8 +203,8 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                       </p>
                     </div>
 
-                    {/* FOOTER DO CARD COM OS BOTÕES ALINHADOS */}
-                    {/* FOOTER DO CARD COM OS BOTÕES RESPONSIVOS */}
+                    {}
+                    {}
                     <div
                       className="job-footer"
                       style={{
@@ -216,7 +214,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         gap: "12px",
                       }}
                     >
-                      {/* Contagem de candidatos no topo */}
+                      {}
                       <span
                         style={{
                           fontSize: "14px",
@@ -227,7 +225,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         👥 {job._count.applications} candidato(s)
                       </span>
 
-                      {/* Botões embaixo, dividindo o espaço */}
+                      {}
                       <div
                         style={{ display: "flex", gap: "8px", width: "100%" }}
                       >
@@ -271,7 +269,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           </div>
         )}
 
-        {/* ABA DE CRIAR VAGA */}
+        {}
         {activeTab === "criar" && (
           <div className="perfil-page" style={{ textAlign: "left" }}>
             <h1>Publicar Nova Vaga</h1>
@@ -334,7 +332,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           </div>
         )}
 
-        {/* ABA DE CANDIDATOS */}
+        {}
         {activeTab === "candidatos" && (
           <div>
             <button
@@ -373,7 +371,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                           "Não informada"}
                       </p>
 
-                      {/* AQUI ENTRA O ALERTA LARANJA */}
+                      {}
                       {candidate.requiresInterpreter && (
                         <div
                           style={{
@@ -443,7 +441,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           </div>
         )}
 
-        {/* ABA DE PERFIL DA EMPRESA */}
+        {}
         {activeTab === "perfil" && <PerfilEmpresa />}
       </main>
     </div>

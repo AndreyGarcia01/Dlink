@@ -26,6 +26,11 @@ function App() {
     return user ? JSON.parse(user).name : "";
   });
 
+  const [userEmail, setUserEmail] = useState(() => {
+    const user = localStorage.getItem("@DLink:user");
+    return user ? JSON.parse(user).email : "";
+  });
+
   // O Login agora precisa nos passar o "role" (perfil)
   const handleLogin = (email: string, role: string) => {
     setUserEmail(email);
@@ -84,6 +89,7 @@ function App() {
         userName={userName}
         userEmail={userEmail}
         onLogout={handleLogout}
+        onUpdateName={setUserName}
       />
     );
   };

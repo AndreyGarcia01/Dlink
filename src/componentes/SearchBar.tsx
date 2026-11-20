@@ -2,7 +2,7 @@ import SearchIcon from "./icons/SearchIcon";
 import FilterIcon from "./icons/FilterIcon";
 
 interface SearchBarProps {
-  onSearch?: (termo: string) => void; // Futuramente você pode usar isso para filtrar
+  onSearch?: (termo: string) => void;
 }
 
 export default function SearchBar({ onSearch }: SearchBarProps) {

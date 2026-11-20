@@ -7,7 +7,6 @@ import {
 
 const router = Router();
 
-// LISTAR VAGAS
 router.get(
   "/",
   ensureAuthenticated,
@@ -18,7 +17,6 @@ router.get(
         include: {
           company: { select: { name: true, sector: true } },
           accessibilities: true,
-          // Se for candidato, busca as candidaturas dele para essas vagas
           applications:
             req.user?.role === "candidate"
               ? {
@@ -37,15 +35,11 @@ router.get(
   },
 );
 
-// ==========================================
-// CRIAR VAGA (Apenas Empresa logada - RF11)
-// ==========================================
 router.post(
   "/",
   ensureAuthenticated,
   async (req: AuthRequest, res: Response) => {
     try {
-      // Verifica se quem está criando é realmente uma empresa
       if (req.user?.role !== "company") {
         return res
           .status(403)
@@ -90,7 +84,6 @@ router.post(
   },
 );
 
-// CANDIDATAR-SE A UMA VAGA (RF17)
 router.post(
   "/:id/apply",
   ensureAuthenticated,
@@ -99,7 +92,6 @@ router.post(
       const jobId = String(req.params.id);
       const candidateId = req.user!.id;
 
-      // Recebe se precisa de intérprete
       const { requiresInterpreter } = req.body;
 
       if (req.user?.role !== "candidate") {
@@ -122,7 +114,7 @@ router.post(
         data: {
           candidateId: candidateId,
           jobId: jobId,
-          requiresInterpreter: requiresInterpreter || false, // <-- Salva a escolha
+          requiresInterpreter: requiresInterpreter || false,
           status: "pending",
         },
       });
@@ -137,9 +129,6 @@ router.post(
   },
 );
 
-// ==========================================
-// LISTAR VAGAS DA EMPRESA LOGADA
-// ==========================================
 router.get(
   "/company/me",
   ensureAuthenticated,
@@ -155,7 +144,7 @@ router.get(
         where: { companyId: req.user.id },
         include: {
           _count: {
-            select: { applications: true }, // Conta quantos se candidataram
+            select: { applications: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -171,9 +160,6 @@ router.get(
   },
 );
 
-// ==========================================
-// BUSCAR CANDIDATOS DE UMA VAGA
-// ==========================================
 router.get(
   "/:id/candidates",
   ensureAuthenticated,
@@ -184,12 +170,11 @@ router.get(
       }
       const jobId = String(req.params.id);
 
-      // Busca as candidaturas, trazendo os dados do candidato e do perfil dele
       const applications = await prisma.application.findMany({
         where: { jobId: jobId },
         include: {
           candidate: {
-            include: { candidateProfile: true }, // Traz bio, habilidades, etc.
+            include: { candidateProfile: true },
           },
         },
       });
@@ -202,9 +187,6 @@ router.get(
   },
 );
 
-// ==========================================
-// ENCERRAR VAGA (RN08)
-// ==========================================
 router.patch(
   "/:id/close",
   ensureAuthenticated,
@@ -219,7 +201,6 @@ router.patch(
           .json({ error: "Apenas empresas podem encerrar vagas." });
       }
 
-      // Verifica se a vaga existe e pertence à empresa logada
       const job = await prisma.job.findUnique({ where: { id: jobId } });
 
       if (!job) {
@@ -231,7 +212,6 @@ router.patch(
           .json({ error: "Você não tem permissão para encerrar esta vaga." });
       }
 
-      // Atualiza o status para 'closed'
       const updatedJob = await prisma.job.update({
         where: { id: jobId },
         data: { status: "closed" },
