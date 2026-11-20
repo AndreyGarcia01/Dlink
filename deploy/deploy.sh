@@ -1,8 +1,4 @@
-#!/usr/bin/env bash
-# Roda DENTRO da EC2 (o workflow deploy.yml manda este arquivo por SSH).
-# Atualiza o código para o commit testado pelo CI, gera o site e reinicia a API.
-#
-# Uso: bash deploy.sh <sha-do-commit>
+
 set -euo pipefail
 
 SHA="${1:?informe o commit}"
@@ -18,9 +14,17 @@ fi
 
 echo "==> Baixando o código do GitHub"
 git fetch --prune origin
-# reset --hard deixa a pasta exatamente igual ao commit testado.
-# Arquivos ignorados pelo Git (.env, node_modules, dist) não são apagados.
+
+
+install -m 600 .env "$HOME/.dlink-env-backup"
+
+
 git reset --hard "$SHA"
+
+if [ ! -f .env ]; then
+  echo "O .env sumiu no reset; restaurando a cópia de segurança."
+  install -m 600 "$HOME/.dlink-env-backup" .env
+fi
 echo "Versão: $(git log --oneline -1)"
 
 echo "==> Instalando dependências"
@@ -28,7 +32,7 @@ npm ci --no-audit --no-fund
 
 echo "==> Prisma"
 npx prisma generate
-# Aplica no banco só as migrations novas que ainda não foram aplicadas.
+
 npx prisma migrate deploy
 
 echo "==> Gerando o site (dist)"
@@ -37,7 +41,7 @@ npm run build
 echo "==> Reiniciando a API"
 pm2 delete "$NOME_PM2" > /dev/null 2>&1 || true
 pm2 start npm --name "$NOME_PM2" -- run start:server
-# Guarda a lista do PM2 para a API voltar sozinha quando a EC2 reiniciar
+
 pm2 save
 
 echo "==> Conferindo se a API respondeu"
