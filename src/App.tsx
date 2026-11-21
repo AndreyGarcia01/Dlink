@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Login from "./componentes/Login";
 import CriarConta from "./componentes/CriarConta";
 import Dashboard from "./componentes/Dashboard";
 import PainelEmpresa from "./componentes/PainelEmpresa";
 import ReactVLibras from "react-vlibras-plugin";
+import { SESSAO_EXPIRADA } from "./services/api";
 import "./App.css";
 
 type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
@@ -28,6 +29,16 @@ function App() {
 
   const [userName, setUserName] = useState(() => lerUsuario()?.name ?? "");
   const [userEmail, setUserEmail] = useState(() => lerUsuario()?.email ?? "");
+
+  useEffect(() => {
+    const voltarParaLogin = () => {
+      setUserName("");
+      setUserEmail("");
+      setView("login");
+    };
+    window.addEventListener(SESSAO_EXPIRADA, voltarParaLogin);
+    return () => window.removeEventListener(SESSAO_EXPIRADA, voltarParaLogin);
+  }, []);
 
   const handleLogin = (email: string, role: string) => {
     setUserEmail(email);

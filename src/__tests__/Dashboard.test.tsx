@@ -54,9 +54,7 @@ describe("Dashboard do candidato — busca e filtros (RF14/RF16)", () => {
   it("mostra todas as vagas e marca a que já tem candidatura", async () => {
     renderDashboard();
 
-    expect(
-      await screen.findByText("Desenvolvedor Front-end"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Desenvolvedor Front-end")).toBeInTheDocument();
     expect(screen.getByText("Auxiliar Administrativo")).toBeInTheDocument();
     expect(screen.getByText("2 vagas encontradas")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Candidatado/ })).toBeDisabled();
@@ -69,9 +67,7 @@ describe("Dashboard do candidato — busca e filtros (RF14/RF16)", () => {
     await user.type(screen.getByLabelText("Buscar vagas"), "react");
 
     expect(screen.getByText("1 vagas encontradas")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Auxiliar Administrativo"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Auxiliar Administrativo")).not.toBeInTheDocument();
   });
 
   it("abre os filtros e filtra por localidade", async () => {
@@ -80,15 +76,10 @@ describe("Dashboard do candidato — busca e filtros (RF14/RF16)", () => {
 
     await user.click(screen.getByRole("button", { name: /Filtros/ }));
     const painel = document.getElementById("painel-filtros")!;
-    await user.selectOptions(
-      within(painel).getByLabelText("Localidade"),
-      "Blumenau",
-    );
+    await user.selectOptions(within(painel).getByLabelText("Localidade"), "Blumenau");
 
     expect(screen.getByText("Auxiliar Administrativo")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Desenvolvedor Front-end"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Desenvolvedor Front-end")).not.toBeInTheDocument();
   });
 
   it("mostra estado vazio e limpa os filtros", async () => {
@@ -96,9 +87,7 @@ describe("Dashboard do candidato — busca e filtros (RF14/RF16)", () => {
     await screen.findByText("Desenvolvedor Front-end");
 
     await user.type(screen.getByLabelText("Buscar vagas"), "astronauta");
-    expect(
-      screen.getByText("Nenhuma vaga com esses filtros"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Nenhuma vaga com esses filtros")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Limpar filtros" }));
     expect(screen.getByText("2 vagas encontradas")).toBeInTheDocument();
