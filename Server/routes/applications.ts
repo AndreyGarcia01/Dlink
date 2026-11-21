@@ -17,10 +17,23 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
     }
 
     const applicationId = String(req.params.id);
-    const { status } = req.body;
+    const { status } = req.body ?? {};
 
     if (!["approved", "rejected"].includes(status)) {
       return res.status(400).json({ error: "Status inválido." });
+    }
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { job: { select: { companyId: true } } },
+    });
+    if (!application) {
+      return res.status(404).json({ error: "Candidatura não encontrada." });
+    }
+    if (application.job.companyId !== req.user.id) {
+      return res
+        .status(403)
+        .json({ error: "Você só pode avaliar candidaturas das suas vagas." });
     }
 
     const updatedApplication = await prisma.application.update({

@@ -58,8 +58,12 @@ describe("CriarConta", () => {
     ).toBeInTheDocument();
   });
 
-  it("cadastra candidato com os dados de acessibilidade", async () => {
-    post.mockResolvedValue({ data: {} });
+  it("cadastra candidato com os dados de acessibilidade e já entra na conta", async () => {
+    post.mockImplementation(async (url: string) =>
+      url === "/auth/login"
+        ? { data: { token: "token-novo", user: { name: "Maria", role: "candidate" } } }
+        : { data: {} },
+    );
     const { user, onCreated } = renderCriarConta();
 
     await user.type(screen.getByLabelText("Nome completo *"), "Maria");
@@ -85,6 +89,11 @@ describe("CriarConta", () => {
         cnpj: null,
       }),
     );
+    expect(post).toHaveBeenCalledWith("/auth/login", {
+      email: "maria@email.com",
+      password: "123456",
+    });
+    expect(localStorage.getItem("@DLink:token")).toBe("token-novo");
     expect(onCreated).toHaveBeenCalledWith(
       "Maria",
       "maria@email.com",
@@ -93,7 +102,7 @@ describe("CriarConta", () => {
   });
 
   it("cadastra empresa com CNPJ e setor", async () => {
-    post.mockResolvedValue({ data: {} });
+    post.mockResolvedValue({ data: { token: "t", user: { role: "company" } } });
     const { user, onCreated } = renderCriarConta();
 
     await user.click(screen.getByRole("button", { name: /Empresa/ }));

@@ -36,7 +36,38 @@ describe("PUT /api/applications/:id/status", () => {
     expect(prismaMock.application.update).not.toHaveBeenCalled();
   });
 
-  it("atualiza o status", async () => {
+  it("devolve 404 se a candidatura não existe", async () => {
+    prismaMock.application.findUnique.mockResolvedValue(null);
+
+    const res = await request(app)
+      .put("/api/applications/a1/status")
+      .set(empresa)
+      .send({ status: "approved" });
+
+    expect(res.status).toBe(404);
+    expect(prismaMock.application.update).not.toHaveBeenCalled();
+  });
+
+  it("não deixa uma empresa avaliar candidatura da vaga de outra (RN10)", async () => {
+    prismaMock.application.findUnique.mockResolvedValue({
+      id: "a1",
+      job: { companyId: "outra" },
+    });
+
+    const res = await request(app)
+      .put("/api/applications/a1/status")
+      .set(empresa)
+      .send({ status: "approved" });
+
+    expect(res.status).toBe(403);
+    expect(prismaMock.application.update).not.toHaveBeenCalled();
+  });
+
+  it("atualiza o status da candidatura da própria vaga", async () => {
+    prismaMock.application.findUnique.mockResolvedValue({
+      id: "a1",
+      job: { companyId: "company-1" },
+    });
     prismaMock.application.update.mockResolvedValue({
       id: "a1",
       status: "approved",
@@ -56,7 +87,7 @@ describe("PUT /api/applications/:id/status", () => {
   });
 
   it("devolve 500 se o banco falhar", async () => {
-    prismaMock.application.update.mockRejectedValue(new Error("banco fora"));
+    prismaMock.application.findUnique.mockRejectedValue(new Error("banco fora"));
 
     const res = await request(app)
       .put("/api/applications/a1/status")

@@ -163,7 +163,9 @@ describe("POST /api/jobs/:id/apply", () => {
   });
 
   it("devolve 500 se o banco falhar", async () => {
-    prismaMock.application.findUnique.mockRejectedValue(new Error("banco fora"));
+    prismaMock.application.findUnique.mockRejectedValue(
+      new Error("banco fora"),
+    );
 
     const res = await request(app)
       .post("/api/jobs/j1/apply")
@@ -202,25 +204,54 @@ describe("GET /api/jobs/company/me", () => {
 });
 
 describe("GET /api/jobs/:id/candidates", () => {
+  const vagaDaEmpresa = { id: "j1", companyId: "company-1" };
+
   it("é restrito a empresas", async () => {
-    const res = await request(app).get("/api/jobs/j1/candidates").set(candidato);
+    const res = await request(app)
+      .get("/api/jobs/j1/candidates")
+      .set(candidato);
 
     expect(res.status).toBe(403);
   });
 
-  it("lista as candidaturas da vaga", async () => {
+  it("devolve 404 se a vaga não existe", async () => {
+    prismaMock.job.findUnique.mockResolvedValue(null);
+
+    const res = await request(app).get("/api/jobs/j1/candidates").set(empresa);
+
+    expect(res.status).toBe(404);
+    expect(prismaMock.application.findMany).not.toHaveBeenCalled();
+  });
+
+  it("não deixa uma empresa ver candidatos da vaga de outra (RN07)", async () => {
+    prismaMock.job.findUnique.mockResolvedValue({
+      id: "j1",
+      companyId: "outra",
+    });
+
+    const res = await request(app).get("/api/jobs/j1/candidates").set(empresa);
+
+    expect(res.status).toBe(403);
+    expect(prismaMock.application.findMany).not.toHaveBeenCalled();
+  });
+
+  it("lista as candidaturas da própria vaga sem expor a senha", async () => {
+    prismaMock.job.findUnique.mockResolvedValue(vagaDaEmpresa);
     prismaMock.application.findMany.mockResolvedValue([{ id: "a1" }]);
 
     const res = await request(app).get("/api/jobs/j1/candidates").set(empresa);
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([{ id: "a1" }]);
-    expect(prismaMock.application.findMany.mock.calls[0][0].where).toEqual({
-      jobId: "j1",
-    });
+    const args = prismaMock.application.findMany.mock.calls[0][0];
+    expect(args.where).toEqual({ jobId: "j1" });
+
+    expect(args.include.candidate.select.passwordHash).toBeUndefined();
+    expect(args.include.candidate.select.name).toBe(true);
   });
 
   it("devolve 500 se o banco falhar", async () => {
+    prismaMock.job.findUnique.mockResolvedValue(vagaDaEmpresa);
     prismaMock.application.findMany.mockRejectedValue(new Error("banco fora"));
 
     const res = await request(app).get("/api/jobs/j1/candidates").set(empresa);
@@ -245,7 +276,10 @@ describe("PATCH /api/jobs/:id/close", () => {
   });
 
   it("não deixa encerrar vaga de outra empresa", async () => {
-    prismaMock.job.findUnique.mockResolvedValue({ id: "j1", companyId: "outra" });
+    prismaMock.job.findUnique.mockResolvedValue({
+      id: "j1",
+      companyId: "outra",
+    });
 
     const res = await request(app).patch("/api/jobs/j1/close").set(empresa);
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import Perfil from "./Perfil";
+import SearchBar from "./SearchBar";
 import axios from "axios";
 
 interface DashboardProps {
@@ -31,7 +32,16 @@ interface Application {
   };
 }
 
-function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
+function opcoes(jobs: Job[], campo: "location" | "category" | "workRegion") {
+  return [...new Set(jobs.map((job) => job[campo]).filter(Boolean))].sort();
+}
+
+function Dashboard({
+  userName,
+  userEmail,
+  onLogout,
+  onUpdateName,
+}: DashboardProps) {
   const initial = userName.charAt(0).toUpperCase();
   const [activeTab, setActiveTab] = useState<
     "inicio" | "candidaturas" | "perfil"
@@ -42,6 +52,33 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
 
   const [myApplications, setMyApplications] = useState<Application[]>([]);
+
+  const [busca, setBusca] = useState("");
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [filtroLocal, setFiltroLocal] = useState("");
+  const [filtroArea, setFiltroArea] = useState("");
+  const [filtroRegime, setFiltroRegime] = useState("");
+
+  const termo = busca.trim().toLowerCase();
+  const vagasFiltradas = jobs.filter(
+    (job) =>
+      (!termo ||
+        [job.title, job.description, job.company.name]
+          .join(" ")
+          .toLowerCase()
+          .includes(termo)) &&
+      (!filtroLocal || job.location === filtroLocal) &&
+      (!filtroArea || job.category === filtroArea) &&
+      (!filtroRegime || job.workRegion === filtroRegime),
+  );
+  const temFiltro = Boolean(termo || filtroLocal || filtroArea || filtroRegime);
+
+  function limparFiltros() {
+    setBusca("");
+    setFiltroLocal("");
+    setFiltroArea("");
+    setFiltroRegime("");
+  }
 
   useEffect(() => {
     async function carregarDados() {
@@ -147,16 +184,60 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
               Encontre vagas acessíveis para você
             </p>
 
-            <div className="search-row">
-              <div className="search-box">
-                <input type="text" placeholder="Buscar vagas..." />
-              </div>
-              <button type="button" className="filters-btn">
-                Filtros
-              </button>
-            </div>
+            <SearchBar
+              value={busca}
+              onSearch={setBusca}
+              onFiltersClick={() => setMostrarFiltros((v) => !v)}
+              filtersOpen={mostrarFiltros}
+            />
 
-            <p className="results-count">{jobs.length} vagas encontradas</p>
+            {mostrarFiltros && (
+              <div id="painel-filtros" className="field-row">
+                <div className="field">
+                  <label htmlFor="filtro-local">Localidade</label>
+                  <select
+                    id="filtro-local"
+                    value={filtroLocal}
+                    onChange={(e) => setFiltroLocal(e.target.value)}
+                  >
+                    <option value="">Todas</option>
+                    {opcoes(jobs, "location").map((o) => (
+                      <option key={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="filtro-area">Área de atuação</label>
+                  <select
+                    id="filtro-area"
+                    value={filtroArea}
+                    onChange={(e) => setFiltroArea(e.target.value)}
+                  >
+                    <option value="">Todas</option>
+                    {opcoes(jobs, "category").map((o) => (
+                      <option key={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="filtro-regime">Regime</label>
+                  <select
+                    id="filtro-regime"
+                    value={filtroRegime}
+                    onChange={(e) => setFiltroRegime(e.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {opcoes(jobs, "workRegion").map((o) => (
+                      <option key={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <p className="results-count" role="status">
+              {vagasFiltradas.length} vagas encontradas
+            </p>
 
             {isLoading ? (
               <p>Carregando vagas...</p>
@@ -165,9 +246,23 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
                 <h3>Nenhuma vaga encontrada</h3>
                 <p>Ainda não há vagas publicadas. Volte em breve!</p>
               </div>
+            ) : vagasFiltradas.length === 0 ? (
+              <div className="empty-state">
+                <h3>Nenhuma vaga com esses filtros</h3>
+                <p>Tente buscar por outro termo ou limpar os filtros.</p>
+                {temFiltro && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={limparFiltros}
+                  >
+                    Limpar filtros
+                  </button>
+                )}
+              </div>
             ) : (
               <div className="jobs-grid">
-                {jobs.map((job) => {
+                {vagasFiltradas.map((job) => {
                   const hasApplied = appliedJobs.includes(job.id);
 
                   return (
@@ -266,7 +361,7 @@ function Dashboard({ userName, userEmail, onLogout }: DashboardProps) {
           </div>
         )}
 
-        {activeTab === "perfil" && <Perfil />}
+        {activeTab === "perfil" && <Perfil onUpdateName={onUpdateName} />}
       </main>
     </div>
   );

@@ -9,7 +9,6 @@ vi.mock("../lib/prisma", async () => ({
 
 import app from "../app";
 
-// Token válido mas sem o "id" do usuário (cobre a checagem de userId)
 const semId = {
   Authorization: `Bearer ${jwt.sign({ role: "candidate" }, process.env.JWT_SECRET as string)}`,
 };
@@ -20,8 +19,12 @@ beforeEach(() => {
 });
 
 describe("GET /api/profile/me", () => {
-  it("devolve o perfil do usuário logado", async () => {
-    prismaMock.user.findUnique.mockResolvedValue({ id: "candidate-1", name: "Maria" });
+  it("devolve o perfil do usuário logado sem a senha", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "candidate-1",
+      name: "Maria",
+      passwordHash: "hash-secreto",
+    });
 
     const res = await request(app)
       .get("/api/profile/me")
@@ -29,6 +32,7 @@ describe("GET /api/profile/me", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe("Maria");
+    expect(res.body.passwordHash).toBeUndefined();
     expect(prismaMock.user.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "candidate-1" } }),
     );
@@ -63,15 +67,20 @@ describe("GET /api/profile/me", () => {
 
 describe("PUT /api/profile/me", () => {
   it("atualiza dados da empresa sem mexer no perfil de candidato", async () => {
-    prismaMock.user.update.mockResolvedValue({ id: "company-1", sector: "Varejo" });
+    prismaMock.user.update.mockResolvedValue({
+      id: "company-1",
+      sector: "Varejo",
+      passwordHash: "hash-secreto",
+    });
 
     const res = await request(app)
       .put("/api/profile/me")
       .set(authHeader("company"))
-      .send({ name: "Loja X", sector: "Varejo" });
+      .send({ name: "Loja X", sector: "Varejo", bio: "não é candidato" });
 
     expect(res.status).toBe(200);
     expect(res.body.user.sector).toBe("Varejo");
+    expect(res.body.user.passwordHash).toBeUndefined();
     expect(prismaMock.candidateProfile.upsert).not.toHaveBeenCalled();
   });
 
@@ -101,6 +110,51 @@ describe("PUT /api/profile/me", () => {
 
     const args = prismaMock.candidateProfile.upsert.mock.calls[0][0];
     expect(args.update.skills).toBe("React");
+  });
+
+  it("salva experiência, formação e link do vídeo em Libras", async () => {
+    prismaMock.user.update.mockResolvedValue({ id: "candidate-1" });
+    prismaMock.candidateProfile.upsert.mockResolvedValue({});
+
+    const res = await request(app)
+      .put("/api/profile/me")
+      .set(authHeader("candidate"))
+      .send({
+        experience: "Estágio em TI",
+        education: "Engenharia de Software",
+        videoUrl: "https://youtu.be/abc",
+      });
+
+    expect(res.status).toBe(200);
+    const args = prismaMock.candidateProfile.upsert.mock.calls[0][0];
+    expect(args.update).toMatchObject({
+      experience: "Estágio em TI",
+      education: "Engenharia de Software",
+      videoUrl: "https://youtu.be/abc",
+    });
+  });
+
+  it("remove o vídeo quando o link vem vazio", async () => {
+    prismaMock.user.update.mockResolvedValue({ id: "candidate-1" });
+    prismaMock.candidateProfile.upsert.mockResolvedValue({});
+
+    await request(app)
+      .put("/api/profile/me")
+      .set(authHeader("candidate"))
+      .send({ videoUrl: "" });
+
+    const args = prismaMock.candidateProfile.upsert.mock.calls[0][0];
+    expect(args.update.videoUrl).toBeNull();
+  });
+
+  it("recusa link de vídeo que não é http(s)", async () => {
+    const res = await request(app)
+      .put("/api/profile/me")
+      .set(authHeader("candidate"))
+      .send({ videoUrl: "javascript:alert(1)" });
+
+    expect(res.status).toBe(400);
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
   it("devolve 401 se o token não tem id", async () => {

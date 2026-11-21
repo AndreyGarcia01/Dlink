@@ -8,6 +8,11 @@ import "./App.css";
 
 type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
 
+function lerUsuario() {
+  const user = localStorage.getItem("@DLink:user");
+  return user ? JSON.parse(user) : null;
+}
+
 function App() {
   const [view, setView] = useState<View>(() => {
     const token = localStorage.getItem("@DLink:token");
@@ -21,22 +26,14 @@ function App() {
     return "login";
   });
 
-  const [userName, setUserName] = useState(() => {
-    const user = localStorage.getItem("@DLink:user");
-    return user ? JSON.parse(user).name : "";
-  });
+  const [userName, setUserName] = useState(() => lerUsuario()?.name ?? "");
+  const [userEmail, setUserEmail] = useState(() => lerUsuario()?.email ?? "");
 
-  const [userEmail, setUserEmail] = useState(() => {
-    const user = localStorage.getItem("@DLink:user");
-    return user ? JSON.parse(user).email : "";
-  });
-
-  // O Login agora precisa nos passar o "role" (perfil)
   const handleLogin = (email: string, role: string) => {
     setUserEmail(email);
-    setUserName(email.split("@")[0] || "usuário");
 
-    // Redireciona baseado no perfil
+    setUserName(lerUsuario()?.name || email.split("@")[0] || "usuário");
+
     if (role === "company") {
       setView("company_dashboard");
     } else {
@@ -55,12 +52,19 @@ function App() {
     }
   };
 
+  const atualizarNome = (name: string) => {
+    setUserName(name);
+    const user = lerUsuario();
+    if (user) {
+      localStorage.setItem("@DLink:user", JSON.stringify({ ...user, name }));
+    }
+  };
+
   const handleLogout = () => {
-    localStorage.clear(); // Limpa o token ao sair
+    localStorage.clear();
     setView("login");
   };
 
-  // Função auxiliar para decidir qual tela mostrar
   const renderView = () => {
     if (view === "signup") {
       return (
@@ -89,17 +93,17 @@ function App() {
         userName={userName}
         userEmail={userEmail}
         onLogout={handleLogout}
-        onUpdateName={setUserName}
+        onUpdateName={atualizarNome}
       />
     );
   };
 
   return (
     <>
-      {/* Renderiza a tela atual (Login, Dashboard ou Painel) */}
+      {}
       {renderView()}
 
-      {/* O widget do VLibras fica fixo no canto em todas as telas */}
+      {}
       <ReactVLibras position="bottomRight" avatar="guga" />
     </>
   );

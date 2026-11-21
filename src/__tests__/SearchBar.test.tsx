@@ -8,16 +8,28 @@ describe("SearchBar", () => {
     const onSearch = vi.fn();
     render(<SearchBar onSearch={onSearch} />);
 
-    await userEvent.type(screen.getByPlaceholderText("Buscar vagas..."), "dev");
+    await userEvent.type(screen.getByLabelText("Buscar vagas"), "dev");
 
     expect(onSearch).toHaveBeenLastCalledWith("dev");
+    expect(onSearch).toHaveBeenCalledTimes(3);
   });
 
-  it("funciona sem onSearch", async () => {
+  it("só mostra o botão Filtros quando ele tem uma ação", () => {
     render(<SearchBar />);
 
-    await userEvent.type(screen.getByPlaceholderText("Buscar vagas..."), "a");
+    expect(
+      screen.queryByRole("button", { name: /Filtros/ }),
+    ).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByRole("button", { name: /Filtros/ })).toBeInTheDocument();
+  it("abre os filtros ao clicar", async () => {
+    const onFiltersClick = vi.fn();
+    render(<SearchBar onFiltersClick={onFiltersClick} filtersOpen={false} />);
+
+    const botao = screen.getByRole("button", { name: /Filtros/ });
+    expect(botao).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(botao);
+
+    expect(onFiltersClick).toHaveBeenCalled();
   });
 });

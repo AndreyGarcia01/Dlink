@@ -54,6 +54,13 @@ function CriarConta({ onCreated, onBackToLogin }: CriarContaProps) {
         sector: tipo === "empresa" ? setor : null,
       });
 
+      const { data } = await api.post("/auth/login", {
+        email: email.trim(),
+        password,
+      });
+      localStorage.setItem("@DLink:token", data.token);
+      localStorage.setItem("@DLink:user", JSON.stringify(data.user));
+
       onCreated(nome.trim(), email.trim(), role);
     } catch (error) {
       if (
