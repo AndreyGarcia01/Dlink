@@ -121,4 +121,34 @@ describe("Perfil do candidato", () => {
       "Não foi possível carregar seu perfil.",
     );
   });
+
+  it("só mostra o link do vídeo depois de salvo, nunca o texto digitado", async () => {
+    get.mockResolvedValue({ data: { name: "Maria", candidateProfile: null } });
+    const user = userEvent.setup();
+    render(<Perfil />);
+
+    await user.type(
+      await screen.findByLabelText("Vídeo de apresentação em Libras"),
+      "https://youtu.be/xyz",
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "Assistir ao meu vídeo em Libras" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("não transforma em link um endereço perigoso vindo do banco", async () => {
+    get.mockResolvedValue({
+      data: {
+        name: "Maria",
+        candidateProfile: { videoUrl: "javascript:alert(1)" },
+      },
+    });
+    render(<Perfil />);
+
+    await screen.findByLabelText("Nome completo");
+    expect(
+      screen.queryByRole("link", { name: "Assistir ao meu vídeo em Libras" }),
+    ).not.toBeInTheDocument();
+  });
 });

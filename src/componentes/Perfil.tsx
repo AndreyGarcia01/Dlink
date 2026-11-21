@@ -2,6 +2,17 @@ import { useState, useEffect, FormEvent } from "react";
 import axios from "axios";
 import { api } from "../services/api";
 
+function linkSeguro(endereco: string) {
+  try {
+    const url = new URL(endereco);
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 interface PerfilProps {
   onUpdateName?: (name: string) => void;
 }
@@ -14,6 +25,8 @@ function Perfil({ onUpdateName }: PerfilProps) {
   const [experiencia, setExperiencia] = useState("");
   const [formacao, setFormacao] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+
+  const [videoSalvo, setVideoSalvo] = useState("");
   const [novaHabilidade, setNovaHabilidade] = useState("");
   const [habilidades, setHabilidades] = useState<string[]>([]);
 
@@ -26,36 +39,38 @@ function Perfil({ onUpdateName }: PerfilProps) {
 
   const initial = nome.charAt(0).toUpperCase() || "U";
 
-  useEffect(() => {
-    async function carregarPerfil() {
-      try {
-        const { data } = await api.get("/profile/me");
-        const perfil = data.candidateProfile ?? {};
+  async function carregarPerfil() {
+    try {
+      const { data } = await api.get("/profile/me");
+      const perfil = data.candidateProfile ?? {};
 
-        setNome(data.name || "");
-        setPerdaAuditiva(data.hearingLossLevel || "Profundo");
-        setComunicacao(data.communicationPreference || "Libras");
-        setResumo(perfil.bio || "");
-        setExperiencia(perfil.experience || "");
-        setFormacao(perfil.education || "");
-        setVideoUrl(perfil.videoUrl || "");
-        setHabilidades(
-          perfil.skills
-            ? perfil.skills
-                .split(",")
-                .map((h: string) => h.trim())
-                .filter(Boolean)
-            : [],
-        );
-      } catch {
-        setMensagem({
-          tipo: "erro",
-          texto: "Não foi possível carregar seu perfil.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      setNome(data.name || "");
+      setPerdaAuditiva(data.hearingLossLevel || "Profundo");
+      setComunicacao(data.communicationPreference || "Libras");
+      setResumo(perfil.bio || "");
+      setExperiencia(perfil.experience || "");
+      setFormacao(perfil.education || "");
+      setVideoUrl(perfil.videoUrl || "");
+      setVideoSalvo(perfil.videoUrl || "");
+      setHabilidades(
+        perfil.skills
+          ? perfil.skills
+              .split(",")
+              .map((h: string) => h.trim())
+              .filter(Boolean)
+          : [],
+      );
+    } catch {
+      setMensagem({
+        tipo: "erro",
+        texto: "Não foi possível carregar seu perfil.",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  }
+
+  useEffect(() => {
     carregarPerfil();
   }, []);
 
@@ -86,6 +101,8 @@ function Perfil({ onUpdateName }: PerfilProps) {
         videoUrl: videoUrl.trim(),
       });
       onUpdateName?.(nome.trim());
+
+      await carregarPerfil();
       setMensagem({ tipo: "ok", texto: "Perfil salvo com sucesso!" });
     } catch (error) {
       const texto =
@@ -250,16 +267,22 @@ function Perfil({ onUpdateName }: PerfilProps) {
         <p className="perfil-empty-hint">
           Cole o link do seu vídeo (YouTube, Google Drive etc.).
         </p>
-        <input
-          id="perfil-video"
-          type="url"
-          placeholder="https://..."
-          value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
-        />
-        {/^https?:\/\//i.test(videoUrl) && (
+        <div className="field">
+          <input
+            id="perfil-video"
+            type="url"
+            placeholder="https://..."
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+          />
+        </div>
+        {linkSeguro(videoSalvo) && (
           <p>
-            <a href={videoUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              href={linkSeguro(videoSalvo)!}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Assistir ao meu vídeo em Libras
             </a>
           </p>
