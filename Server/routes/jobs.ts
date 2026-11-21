@@ -92,7 +92,7 @@ router.post(
       const jobId = String(req.params.id);
       const candidateId = req.user!.id;
 
-      const { requiresInterpreter } = req.body;
+      const { requiresInterpreter } = req.body ?? {};
 
       if (req.user?.role !== "candidate") {
         return res
@@ -170,11 +170,28 @@ router.get(
       }
       const jobId = String(req.params.id);
 
+      const job = await prisma.job.findUnique({ where: { id: jobId } });
+      if (!job) {
+        return res.status(404).json({ error: "Vaga não encontrada." });
+      }
+      if (job.companyId !== req.user.id) {
+        return res
+          .status(403)
+          .json({ error: "Você só pode ver candidatos das suas vagas." });
+      }
+
       const applications = await prisma.application.findMany({
         where: { jobId: jobId },
         include: {
           candidate: {
-            include: { candidateProfile: true },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              hearingLossLevel: true,
+              communicationPreference: true,
+              candidateProfile: true,
+            },
           },
         },
       });

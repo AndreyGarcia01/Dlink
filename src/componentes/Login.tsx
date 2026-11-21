@@ -130,13 +130,6 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
             <div className="field-error">Digite sua senha.</div>
           </div>
 
-          <div className="form-row-between">
-            <label>
-              <input type="checkbox" /> Lembrar de mim
-            </label>
-            <a href="#">Esqueci minha senha</a>
-          </div>
-
           <button type="submit" className="btn-primary" disabled={isLoading}>
             {isLoading ? "Entrando..." : "Entrar"}
           </button>

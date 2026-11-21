@@ -4,7 +4,9 @@ import userEvent from "@testing-library/user-event";
 import App from "../App";
 import { api } from "../services/api";
 
-vi.mock("../services/api", () => ({ api: { post: vi.fn(), get: vi.fn() } }));
+vi.mock("../services/api", () => ({
+  api: { post: vi.fn(), get: vi.fn(), put: vi.fn() },
+}));
 // O widget do VLibras carrega um script externo; nos testes ele não é necessário.
 vi.mock("react-vlibras-plugin", () => ({ default: () => null }));
 
@@ -68,5 +70,39 @@ describe("App", () => {
     expect(
       await screen.findByRole("heading", { name: "Minhas Vagas" }),
     ).toBeInTheDocument();
+  });
+
+  it("depois do login mostra o nome do usuário, não o e-mail", async () => {
+    vi.mocked(api.post).mockImplementation(async () => {
+      return { data: { token: "abc", user: { name: "Maria Souza", role: "candidate" } } };
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText("E-mail"), "maria@email.com");
+    await user.type(screen.getByLabelText("Senha"), "123456");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(await screen.findByText("Bem-vindo, Maria Souza!")).toBeInTheDocument();
+  });
+
+  it("guarda o nome novo do perfil para não voltar o antigo ao recarregar", async () => {
+    logarComo("candidate");
+    vi.mocked(api.put).mockResolvedValue({ data: {} });
+    vi.mocked(api.get).mockImplementation(async (url: string) => ({
+      data: url === "/profile/me" ? { name: "Maria" } : [],
+    }));
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Meu Perfil" }));
+    const nome = await screen.findByLabelText("Nome completo");
+    await user.clear(nome);
+    await user.type(nome, "Maria Oliveira");
+    await user.click(screen.getByRole("button", { name: "Salvar alterações" }));
+
+    await screen.findByRole("status");
+    expect(JSON.parse(localStorage.getItem("@DLink:user")!).name).toBe("Maria Oliveira");
+    expect(screen.getAllByText("Maria Oliveira").length).toBeGreaterThan(0);
   });
 });
