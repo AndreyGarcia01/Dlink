@@ -1,7 +1,11 @@
-# CD do D-Link: quando o CI passa na main, entra na EC2 por SSH e roda o
-# deploy/deploy.sh (baixa o código, instala, gera o site e reinicia a API no PM2).
+# CD do D-Link: entra na EC2 por SSH e roda o deploy/deploy.sh (baixa o código,
+# instala, migra o banco, gera o site e reinicia a API no PM2).
 #
-# Também dá para rodar na mão: aba Actions > Deploy > Run workflow.
+# Quem chama: o job "deploy" do ci.yml, depois que a qualidade passa num push
+# na main. Assim o deploy usa exatamente o commit que o CI acabou de testar e
+# nunca roda código vindo de fork ou de pull request.
+#
+# Também dá para rodar na mão: aba Actions > Deploy > Run workflow (só na main).
 # Se a EC2 estiver pausada, o deploy falha com aviso; ligue a EC2 e rode na mão.
 #
 # Segredos necessários (Settings > Secrets and variables > Actions > Secrets):
@@ -11,34 +15,32 @@
 name: Deploy
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
+  workflow_call:
+    secrets:
+      EC2_HOST:
+        required: true
+      EC2_SSH_KEY:
+        required: true
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Nunca dois deploys ao mesmo tempo. Um novo espera o anterior terminar.
-concurrency:
-  group: deploy-producao
-  cancel-in-progress: false
-
 jobs:
   deploy:
     name: Deploy na EC2
-    # Só faz deploy se o CI passou (ou se foi disparado na mão a partir da main)
-    if: >-
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    if: github.ref == 'refs/heads/main'
+    # Nunca dois deploys ao mesmo tempo. Um novo espera o anterior terminar.
+    concurrency:
+      group: deploy-producao
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ubuntu
       # Commit exato que o CI testou (ou o último da main, se for na mão)
-      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      SHA: ${{ github.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

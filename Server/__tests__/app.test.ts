@@ -17,6 +17,17 @@ describe("GET /api/health", () => {
   });
 });
 
+describe("cabeçalhos de segurança", () => {
+  it("não anuncia o Express nem libera CORS para outros sites", async () => {
+    const res = await request(app)
+      .get("/api/health")
+      .set("Origin", "https://site-qualquer.com");
+
+    expect(res.headers["x-powered-by"]).toBeUndefined();
+    expect(res.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+});
+
 describe("middleware de autenticação", () => {
   it("recusa requisição sem token", async () => {
     const res = await request(app).get("/api/profile/me");

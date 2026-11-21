@@ -107,4 +107,26 @@ describe("Login", () => {
 
     expect(onCreateAccount).toHaveBeenCalled();
   });
+
+  it("aceita e-mails com vários pontos no domínio e recusa domínio sem ponto", async () => {
+    post.mockResolvedValue({
+      data: { token: "abc", user: { name: "Ana", role: "candidate" } },
+    });
+    const { user } = renderLogin();
+    const campo = screen.getByLabelText("E-mail");
+
+    await user.type(campo, "ana@empresa");
+    await user.type(screen.getByLabelText("Senha"), "123456");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+    expect(campo.closest(".field")).toHaveClass("invalid");
+    expect(post).not.toHaveBeenCalled();
+
+    await user.clear(campo);
+    await user.type(campo, "ana.souza@empresa.com.br");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+    expect(post).toHaveBeenCalledWith("/auth/login", {
+      email: "ana.souza@empresa.com.br",
+      password: "123456",
+    });
+  });
 });

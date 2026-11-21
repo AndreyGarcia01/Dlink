@@ -1,5 +1,6 @@
-# CI do D-Link: qualidade (lint, tipos, testes com cobertura, build) e análise no
-# SonarCloud (só quando o segredo SONAR_TOKEN existir). O deploy (CD) vai ficar num workflow separado (deploy.yml).
+# CI/CD do D-Link: qualidade (lint, tipos, testes com cobertura, build), análise
+# no SonarCloud (quando o segredo SONAR_TOKEN existe) e, em push na main com a
+# qualidade aprovada, o deploy na EC2 (workflow reutilizável deploy.yml).
 #
 # Metas de cobertura (README): 75% no backend e 25% no frontend. Elas estão no
 # vitest.config.ts; se a cobertura cair abaixo disso, o passo de testes falha.
@@ -15,10 +16,11 @@ on:
 permissions:
   contents: read
 
-# Se chegar um push novo na mesma branch/PR, cancela a execução antiga.
+# Em PR, um push novo cancela a execução antiga. Na main não cancela, para
+# nunca interromper um deploy no meio (ex.: durante uma migration).
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   qualidade:
@@ -36,11 +38,12 @@ jobs:
           cache: npm
 
       - name: Instalar dependências
-        run: npm ci --no-audit --no-fund
+        # --ignore-scripts: não roda scripts de instalação de pacotes de terceiros
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       # Gera os tipos do Prisma a partir do schema. Não precisa de banco.
       - name: Prisma Client
-        run: npx prisma generate
+        run: npm run db:generate
 
       - name: Lint (ESLint)
         run: npm run lint
@@ -92,3 +95,11 @@ jobs:
       - name: Análise no SonarCloud
         if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
+
+  deploy:
+    name: Deploy na EC2
+    needs: qualidade
+    # Só publica o que entrou na main (nunca PR nem outras branches)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

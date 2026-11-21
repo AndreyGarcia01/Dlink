@@ -29,21 +29,26 @@ fi
 echo "Versão: $(git log --oneline -1)"
 
 echo "==> Instalando dependências"
-
+# Só reinstala quando o package-lock.json muda. O npm ci apaga e reinstala
+# ~400 pacotes e gasta muita memória numa EC2 pequena.
 HASH_LOCK=$(sha256sum package-lock.json | cut -d' ' -f1)
 HASH_ANTERIOR=$(cat "$HOME/.dlink-lock-hash" 2> /dev/null || true)
 if [ -d node_modules ] && [ "$HASH_LOCK" = "$HASH_ANTERIOR" ]; then
   echo "Dependências iguais ao último deploy; pulando o npm ci."
 else
-  npm ci --no-audit --no-fund
-
+  # --ignore-scripts: não roda scripts de instalação de pacotes de terceiros.
+  # O Prisma Client é gerado logo abaixo, de forma explícita.
+  npm ci --ignore-scripts --no-audit --no-fund
+  # Só grava o hash se a instalação terminou (com set -e, se o npm ci falhar
+  # o script para aqui e o próximo deploy reinstala tudo de novo).
   echo "$HASH_LOCK" > "$HOME/.dlink-lock-hash"
 fi
 
 echo "==> Prisma"
-npx prisma generate
+npm run db:generate
 
-npx prisma migrate deploy
+# Aplica no banco só as migrations novas que ainda não foram aplicadas.
+npm run db:migrate
 
 echo "==> Gerando o site (dist)"
 npm run build
