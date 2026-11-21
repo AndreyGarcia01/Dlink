@@ -21,7 +21,7 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
     e.preventDefault();
     setApiError("");
 
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    const emailOk = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email.trim());
     const passwordOk = password.length > 0;
 
     setEmailError(!emailOk);

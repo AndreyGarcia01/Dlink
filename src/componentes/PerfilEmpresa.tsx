@@ -26,7 +26,7 @@ function PerfilEmpresa() {
         setIsLoading(false);
       }
     }
-    carregarPerfil();
+    void carregarPerfil();
   }, []);
 
   const salvarAlteracoes = async () => {

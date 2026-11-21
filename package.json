@@ -13,7 +13,9 @@
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
     "dev:server": "tsx watch Server/index.ts",
-    "start:server": "tsx Server/index.ts"
+    "start:server": "tsx Server/index.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

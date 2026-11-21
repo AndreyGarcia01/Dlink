@@ -33,7 +33,9 @@ interface Application {
 }
 
 function opcoes(jobs: Job[], campo: "location" | "category" | "workRegion") {
-  return [...new Set(jobs.map((job) => job[campo]).filter(Boolean))].sort();
+  return [...new Set(jobs.map((job) => job[campo]).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b, "pt-BR"),
+  );
 }
 
 function Dashboard({
@@ -102,7 +104,7 @@ function Dashboard({
         setIsLoading(false);
       }
     }
-    carregarDados();
+    void carregarDados();
   }, []);
 
   async function handleApply(jobId: string) {

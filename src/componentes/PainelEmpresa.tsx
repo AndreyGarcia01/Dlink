@@ -3,6 +3,16 @@ import { api } from "../services/api";
 import axios from "axios";
 import PerfilEmpresa from "./PerfilEmpresa";
 
+const AREAS = [
+  "Administração",
+  "Atendimento",
+  "Indústria e Produção",
+  "Logística",
+  "Saúde",
+  "Tecnologia",
+  "Outros",
+];
+
 interface PainelEmpresaProps {
   onLogout: () => void;
 }
@@ -38,6 +48,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
   const [requirements, setRequirements] = useState("");
   const [location, setLocation] = useState("");
   const [workRegion, setWorkRegion] = useState("Presencial");
+  const [category, setCategory] = useState(AREAS[0]);
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +69,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
   }
 
   useEffect(() => {
-    if (activeTab === "vagas") carregarVagas();
+    if (activeTab === "vagas") void carregarVagas();
   }, [activeTab]);
 
   const handleCriarVaga = async (e: React.FormEvent) => {
@@ -70,13 +81,14 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
         requirements,
         location,
         workRegion,
-        category: "Geral",
+        category,
       });
       alert("Vaga publicada com sucesso!");
       setTitle("");
       setDescription("");
       setRequirements("");
       setLocation("");
+      setCategory(AREAS[0]);
       setActiveTab("vagas");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.error)
@@ -275,16 +287,18 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
             <h1>Publicar Nova Vaga</h1>
             <form onSubmit={handleCriarVaga} className="perfil-card">
               <div className="field">
-                <label>Título</label>
+                <label htmlFor="vaga-titulo">Título</label>
                 <input
+                  id="vaga-titulo"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
                 />
               </div>
               <div className="field">
-                <label>Descrição</label>
+                <label htmlFor="vaga-descricao">Descrição</label>
                 <textarea
+                  id="vaga-descricao"
                   className="perfil-textarea"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -292,8 +306,9 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                 />
               </div>
               <div className="field">
-                <label>Requisitos</label>
+                <label htmlFor="vaga-requisitos">Requisitos</label>
                 <textarea
+                  id="vaga-requisitos"
                   className="perfil-textarea"
                   value={requirements}
                   onChange={(e) => setRequirements(e.target.value)}
@@ -302,22 +317,36 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
               </div>
               <div className="field-row">
                 <div className="field">
-                  <label>Localidade</label>
+                  <label htmlFor="vaga-localidade">Localidade</label>
                   <input
+                    id="vaga-localidade"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     required
                   />
                 </div>
                 <div className="field">
-                  <label>Regime</label>
+                  <label htmlFor="vaga-regime">Regime</label>
                   <select
+                    id="vaga-regime"
                     value={workRegion}
                     onChange={(e) => setWorkRegion(e.target.value)}
                   >
                     <option>Presencial</option>
                     <option>Híbrido</option>
                     <option>Remoto</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="vaga-area">Área de atuação</label>
+                  <select
+                    id="vaga-area"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    {AREAS.map((area) => (
+                      <option key={area}>{area}</option>
+                    ))}
                   </select>
                 </div>
               </div>
