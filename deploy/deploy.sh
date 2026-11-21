@@ -1,4 +1,5 @@
 
+
 set -euo pipefail
 
 SHA="${1:?informe o commit}"
@@ -28,7 +29,16 @@ fi
 echo "Versão: $(git log --oneline -1)"
 
 echo "==> Instalando dependências"
-npm ci --no-audit --no-fund
+
+HASH_LOCK=$(sha256sum package-lock.json | cut -d' ' -f1)
+HASH_ANTERIOR=$(cat "$HOME/.dlink-lock-hash" 2> /dev/null || true)
+if [ -d node_modules ] && [ "$HASH_LOCK" = "$HASH_ANTERIOR" ]; then
+  echo "Dependências iguais ao último deploy; pulando o npm ci."
+else
+  npm ci --no-audit --no-fund
+  
+  echo "$HASH_LOCK" > "$HOME/.dlink-lock-hash"
+fi
 
 echo "==> Prisma"
 npx prisma generate
