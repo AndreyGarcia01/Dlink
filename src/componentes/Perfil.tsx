@@ -25,7 +25,6 @@ function Perfil({ onUpdateName }: PerfilProps) {
   const [experiencia, setExperiencia] = useState("");
   const [formacao, setFormacao] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
-
   const [videoSalvo, setVideoSalvo] = useState("");
   const [novaHabilidade, setNovaHabilidade] = useState("");
   const [habilidades, setHabilidades] = useState<string[]>([]);

@@ -36,7 +36,7 @@ if [ -d node_modules ] && [ "$HASH_LOCK" = "$HASH_ANTERIOR" ]; then
   echo "Dependências iguais ao último deploy; pulando o npm ci."
 else
   npm ci --no-audit --no-fund
-  
+
   echo "$HASH_LOCK" > "$HOME/.dlink-lock-hash"
 fi
 

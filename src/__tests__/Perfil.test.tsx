@@ -35,12 +35,8 @@ describe("Perfil do candidato", () => {
     render(<Perfil />);
 
     expect(await screen.findByLabelText("Nome completo")).toHaveValue("Maria");
-    expect(screen.getByLabelText("Grau de perda auditiva")).toHaveValue(
-      "Severa",
-    );
-    expect(screen.getByLabelText("Experiência profissional")).toHaveValue(
-      "Estágio",
-    );
+    expect(screen.getByLabelText("Grau de perda auditiva")).toHaveValue("Severa");
+    expect(screen.getByLabelText("Experiência profissional")).toHaveValue("Estágio");
     expect(screen.getByText("React")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Assistir ao meu vídeo em Libras" }),
@@ -79,9 +75,7 @@ describe("Perfil do candidato", () => {
     render(<Perfil />);
 
     await user.type(await screen.findByLabelText("Nova habilidade"), "Excel");
-    await user.click(
-      screen.getByRole("button", { name: "Adicionar habilidade" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Adicionar habilidade" }));
     expect(screen.getByText("Excel")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Remover Excel" }));
@@ -92,9 +86,7 @@ describe("Perfil do candidato", () => {
     get.mockResolvedValue({ data: { name: "Maria" } });
     put.mockRejectedValue(
       new AxiosError("Erro", "ERR", undefined, undefined, {
-        data: {
-          error: "O link do vídeo deve começar com http:// ou https://.",
-        },
+        data: { error: "O link do vídeo deve começar com http:// ou https://." },
         status: 400,
         statusText: "Bad Request",
         headers: {},
@@ -139,10 +131,7 @@ describe("Perfil do candidato", () => {
 
   it("não transforma em link um endereço perigoso vindo do banco", async () => {
     get.mockResolvedValue({
-      data: {
-        name: "Maria",
-        candidateProfile: { videoUrl: "javascript:alert(1)" },
-      },
+      data: { name: "Maria", candidateProfile: { videoUrl: "javascript:alert(1)" } },
     });
     render(<Perfil />);
 

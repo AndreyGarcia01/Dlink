@@ -17,9 +17,7 @@ describe("SearchBar", () => {
   it("só mostra o botão Filtros quando ele tem uma ação", () => {
     render(<SearchBar />);
 
-    expect(
-      screen.queryByRole("button", { name: /Filtros/ }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Filtros/ })).not.toBeInTheDocument();
   });
 
   it("abre os filtros ao clicar", async () => {

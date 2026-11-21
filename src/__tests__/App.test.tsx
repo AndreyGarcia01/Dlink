@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
 import { api } from "../services/api";
 
 vi.mock("../services/api", () => ({
   api: { post: vi.fn(), get: vi.fn(), put: vi.fn() },
+  SESSAO_EXPIRADA: "dlink:sessao-expirada",
 }));
-// O widget do VLibras carrega um script externo; nos testes ele não é necessário.
+
 vi.mock("react-vlibras-plugin", () => ({ default: () => null }));
 
 beforeEach(() => {
@@ -34,8 +35,12 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Criar conta gratuita" }));
-    expect(screen.getByRole("heading", { name: "Criar conta" })).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Criar conta gratuita" }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Criar conta" }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Fazer login" }));
     expect(screen.getByRole("button", { name: "Entrar" })).toBeInTheDocument();
@@ -45,7 +50,9 @@ describe("App", () => {
     logarComo("candidate");
     render(<App />);
 
-    expect(screen.queryByRole("button", { name: "Entrar" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Entrar" }),
+    ).not.toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith("/jobs");
   });
 
@@ -53,7 +60,9 @@ describe("App", () => {
     logarComo("company");
     render(<App />);
 
-    expect(screen.queryByRole("button", { name: "Entrar" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Entrar" }),
+    ).not.toBeInTheDocument();
   });
 
   it("depois do login, empresa vai para o painel da empresa", async () => {
@@ -74,7 +83,12 @@ describe("App", () => {
 
   it("depois do login mostra o nome do usuário, não o e-mail", async () => {
     vi.mocked(api.post).mockImplementation(async () => {
-      return { data: { token: "abc", user: { name: "Maria Souza", role: "candidate" } } };
+      return {
+        data: {
+          token: "abc",
+          user: { name: "Maria Souza", role: "candidate" },
+        },
+      };
     });
     const user = userEvent.setup();
     render(<App />);
@@ -83,7 +97,9 @@ describe("App", () => {
     await user.type(screen.getByLabelText("Senha"), "123456");
     await user.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(await screen.findByText("Bem-vindo, Maria Souza!")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Bem-vindo, Maria Souza!"),
+    ).toBeInTheDocument();
   });
 
   it("guarda o nome novo do perfil para não voltar o antigo ao recarregar", async () => {
@@ -102,7 +118,25 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Salvar alterações" }));
 
     await screen.findByRole("status");
-    expect(JSON.parse(localStorage.getItem("@DLink:user")!).name).toBe("Maria Oliveira");
+    expect(JSON.parse(localStorage.getItem("@DLink:user")!).name).toBe(
+      "Maria Oliveira",
+    );
     expect(screen.getAllByText("Maria Oliveira").length).toBeGreaterThan(0);
+  });
+
+  it("volta para o login quando a sessão expira", async () => {
+    logarComo("candidate");
+    render(<App />);
+    expect(
+      screen.queryByRole("button", { name: "Entrar" }),
+    ).not.toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(new Event("dlink:sessao-expirada"));
+    });
+
+    expect(
+      await screen.findByRole("button", { name: "Entrar" }),
+    ).toBeInTheDocument();
   });
 });
