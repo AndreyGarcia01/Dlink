@@ -31,7 +31,7 @@ function App() {
         : "candidate_dashboard";
     }
 
-    return "publico";
+    return "login";
   });
 
   const [userName, setUserName] = useState(() => lerUsuario()?.name ?? "");
@@ -80,7 +80,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.clear();
-    setView("publico");
+    setView("login");
   };
 
   const renderView = () => {
