@@ -1,7 +1,7 @@
--- CreateEnum
+
 CREATE TYPE "Role" AS ENUM ('candidate', 'company');
 
--- CreateTable
+
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "name" VARCHAR(150) NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE "users" (
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+
 CREATE TABLE "candidate_profiles" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE "candidate_profiles" (
     CONSTRAINT "candidate_profiles_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+
 CREATE TABLE "jobs" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE "jobs" (
     CONSTRAINT "jobs_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+
 CREATE TABLE "job_accessibility" (
     "id" TEXT NOT NULL,
     "job_id" TEXT NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE "job_accessibility" (
     CONSTRAINT "job_accessibility_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+
 CREATE TABLE "applications" (
     "id" TEXT NOT NULL,
     "candidate_id" TEXT NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE "applications" (
     CONSTRAINT "applications_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+
 CREATE TABLE "notifications" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE "notifications" (
     CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+
 CREATE TABLE "content_articles" (
     "id" TEXT NOT NULL,
     "title" VARCHAR(200) NOT NULL,
@@ -96,29 +96,29 @@ CREATE TABLE "content_articles" (
     CONSTRAINT "content_articles_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
+
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
--- CreateIndex
+
 CREATE UNIQUE INDEX "candidate_profiles_user_id_key" ON "candidate_profiles"("user_id");
 
--- CreateIndex
+
 CREATE UNIQUE INDEX "applications_candidate_id_job_id_key" ON "applications"("candidate_id", "job_id");
 
--- AddForeignKey
+
 ALTER TABLE "candidate_profiles" ADD CONSTRAINT "candidate_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
+
 ALTER TABLE "jobs" ADD CONSTRAINT "jobs_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
+
 ALTER TABLE "job_accessibility" ADD CONSTRAINT "job_accessibility_job_id_fkey" FOREIGN KEY ("job_id") REFERENCES "jobs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
+
 ALTER TABLE "applications" ADD CONSTRAINT "applications_candidate_id_fkey" FOREIGN KEY ("candidate_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
+
 ALTER TABLE "applications" ADD CONSTRAINT "applications_job_id_fkey" FOREIGN KEY ("job_id") REFERENCES "jobs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
+
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
