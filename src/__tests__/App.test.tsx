@@ -25,23 +25,18 @@ function logarComo(role: "candidate" | "company") {
 }
 
 describe("App", () => {
-  it("abre na área pública quando não tem ninguém logado", async () => {
+  it("abre no login quando não tem ninguém logado", () => {
     render(<App />);
 
+    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /Vagas inclusivas/ }),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("Nenhuma vaga aberta no momento"),
-    ).toBeInTheDocument();
+      screen.queryByRole("heading", { name: /Vagas inclusivas/ }),
+    ).not.toBeInTheDocument();
   });
 
-  it("da área pública vai para o login e volta", async () => {
+  it("do login vai para a área pública e volta", async () => {
     const user = userEvent.setup();
     render(<App />);
-
-    await user.click(screen.getByRole("button", { name: "Entrar" }));
-    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: /Ver vagas sem cadastro/ }),
@@ -49,25 +44,28 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: /Vagas inclusivas/ }),
     ).toBeInTheDocument();
+    expect(
+      await screen.findByText("Nenhuma vaga aberta no momento"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
   });
 
-  it("ao sair volta para a área pública", async () => {
+  it("ao sair volta para o login", async () => {
     logarComo("candidate");
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Sair" }));
 
-    expect(
-      screen.getByRole("heading", { name: /Vagas inclusivas/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
     expect(localStorage.getItem("@DLink:token")).toBeNull();
   });
 
   it("vai do login para a tela de criar conta e volta", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     await user.click(
       screen.getByRole("button", { name: "Criar conta gratuita" }),
@@ -105,7 +103,6 @@ describe("App", () => {
     });
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     await user.type(screen.getByLabelText("E-mail"), "rh@lojax.com");
     await user.type(screen.getByLabelText("Senha"), "123456");
@@ -127,7 +124,6 @@ describe("App", () => {
     });
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     await user.type(screen.getByLabelText("E-mail"), "maria@email.com");
     await user.type(screen.getByLabelText("Senha"), "123456");
