@@ -1,0 +1,12 @@
+// Trecho para colar no FINAL do /etc/alloy/config.alloy da EC2.
+// Lê as métricas da API do D-Link (http://localhost:3333/metrics) a cada 30 s
+// e envia para o Grafana Cloud pelo mesmo destino que o instalador já criou.
+// Troque NOME_DO_REMOTE_WRITE pelo nome que aparece em
+// "prometheus.remote_write "<nome>"" no próprio config.alloy.
+
+prometheus.scrape "dlink_api" {
+  targets         = [{"__address__" = "localhost:3333", "job" = "dlink-api"}]
+  metrics_path    = "/metrics"
+  scrape_interval = "30s"
+  forward_to      = [prometheus.remote_write.NOME_DO_REMOTE_WRITE.receiver]
+}

@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import prisma from "../lib/prisma";
+import { registrarEvento } from "../lib/metricas";
 import {
   ensureAuthenticated,
   AuthRequest,
@@ -74,6 +75,7 @@ router.post(
         },
       });
 
+      registrarEvento("vaga_publicada");
       return res
         .status(201)
         .json({ message: "Vaga publicada com sucesso!", job });
@@ -119,6 +121,9 @@ router.post(
         },
       });
 
+      registrarEvento(
+        requiresInterpreter ? "candidatura_com_interprete" : "candidatura",
+      );
       return res
         .status(201)
         .json({ message: "Candidatura realizada com sucesso!", application });
@@ -234,6 +239,7 @@ router.patch(
         data: { status: "closed" },
       });
 
+      registrarEvento("vaga_encerrada");
       return res.json({
         message: "Vaga encerrada com sucesso!",
         job: updatedJob,

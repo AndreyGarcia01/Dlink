@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import prisma from "../lib/prisma";
+import { registrarEvento } from "../lib/metricas";
 import {
   ensureAuthenticated,
   AuthRequest,
@@ -41,6 +42,7 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
       data: { status },
     });
 
+    registrarEvento(`candidatura_${status}`);
     return res.json({
       message: "Status atualizado!",
       application: updatedApplication,

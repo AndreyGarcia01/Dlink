@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
+import { registrarEvento } from "../lib/metricas";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -63,6 +64,7 @@ router.post("/register", async (req: Request, res: Response) => {
 
     const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
+    registrarEvento(`cadastro_${role}`);
     return res.status(201).json({
       message: "Conta criada com sucesso!",
       user: userWithoutPassword,
@@ -101,6 +103,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
     const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
+    registrarEvento("login");
     return res.json({
       message: "Login realizado com sucesso!",
       token,

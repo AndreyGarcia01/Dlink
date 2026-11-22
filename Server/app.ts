@@ -3,12 +3,16 @@ import authRoutes from "./routes/auth";
 import profileRoutes from "./routes/profile";
 import jobsRoutes from "./routes/jobs";
 import applicationRoutes from "./routes/applications";
+import { medirRequisicoes, exporMetricas } from "./lib/metricas";
 
 const app = express();
 
 app.disable("x-powered-by");
 
 app.use(express.json());
+app.use(medirRequisicoes);
+
+app.get("/metrics", exporMetricas);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "OK", message: "Backend do D-Link está rodando!" });
