@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import axios from "axios";
 import PerfilEmpresa from "./PerfilEmpresa";
+import Notificacoes from "./Notificacoes";
+import { linkSeguro } from "../utils/linkSeguro";
+import AcessibilidadeTags from "./AcessibilidadeTags";
+import {
+  RECURSOS_ACESSIBILIDADE,
+  type RecursoAcessibilidade,
+  type StatusRecurso,
+} from "../constantes/acessibilidade";
 
 const AREAS = [
   "Administração",
@@ -20,11 +28,17 @@ interface PainelEmpresaProps {
 interface Job {
   id: string;
   title: string;
+  description: string;
+  requirements: string;
+  category: string | null;
   status: string;
   location: string;
   workRegion: string;
+  accessibilities?: RecursoAcessibilidade[];
   _count: { applications: number };
 }
+
+type RecursosMarcados = Record<string, StatusRecurso>;
 
 interface Application {
   id: string;
@@ -34,7 +48,13 @@ interface Application {
     name: string;
     email: string;
     communicationPreference: string;
-    candidateProfile?: { bio: string; skills: string };
+    candidateProfile?: {
+      bio: string | null;
+      skills: string | null;
+      experience: string | null;
+      education: string | null;
+      videoUrl: string | null;
+    } | null;
   };
 }
 
@@ -49,6 +69,9 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
   const [location, setLocation] = useState("");
   const [workRegion, setWorkRegion] = useState("Presencial");
   const [category, setCategory] = useState(AREAS[0]);
+  const [recursos, setRecursos] = useState<RecursosMarcados>({});
+
+  const [editandoId, setEditandoId] = useState<string | null>(null);
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,28 +95,83 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
     if (activeTab === "vagas") void carregarVagas();
   }, [activeTab]);
 
-  const handleCriarVaga = async (e: React.FormEvent) => {
+  function limparFormulario() {
+    setTitle("");
+    setDescription("");
+    setRequirements("");
+    setLocation("");
+    setWorkRegion("Presencial");
+    setCategory(AREAS[0]);
+    setRecursos({});
+    setEditandoId(null);
+  }
+
+  function novaVaga() {
+    limparFormulario();
+    setActiveTab("criar");
+  }
+
+  function editarVaga(job: Job) {
+    setTitle(job.title);
+    setDescription(job.description);
+    setRequirements(job.requirements);
+    setLocation(job.location);
+    setWorkRegion(job.workRegion);
+    setCategory(
+      job.category && AREAS.includes(job.category) ? job.category : AREAS[0],
+    );
+    setRecursos(
+      Object.fromEntries(
+        (job.accessibilities ?? []).map((r) => [
+          r.resource,
+          r.status as StatusRecurso,
+        ]),
+      ),
+    );
+    setEditandoId(job.id);
+    setActiveTab("criar");
+  }
+
+  function alternarRecurso(recurso: string) {
+    setRecursos((atual) => {
+      const novo = { ...atual };
+      if (novo[recurso]) delete novo[recurso];
+      else novo[recurso] = "available";
+      return novo;
+    });
+  }
+
+  const handleSalvarVaga = async (e: React.FormEvent) => {
     e.preventDefault();
+    const dados = {
+      title,
+      description,
+      requirements,
+      location,
+      workRegion,
+      category,
+      accessibilities: Object.entries(recursos).map(([resource, status]) => ({
+        resource,
+        status,
+      })),
+    };
     try {
-      await api.post("/jobs", {
-        title,
-        description,
-        requirements,
-        location,
-        workRegion,
-        category,
-      });
-      alert("Vaga publicada com sucesso!");
-      setTitle("");
-      setDescription("");
-      setRequirements("");
-      setLocation("");
-      setCategory(AREAS[0]);
+      if (editandoId) {
+        await api.put(`/jobs/${editandoId}`, dados);
+        alert("Vaga atualizada com sucesso!");
+      } else {
+        await api.post("/jobs", dados);
+        alert("Vaga publicada com sucesso!");
+      }
+      limparFormulario();
       setActiveTab("vagas");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.error)
         alert(error.response.data.error);
-      else alert("Erro ao publicar vaga.");
+      else
+        alert(
+          editandoId ? "Erro ao atualizar vaga." : "Erro ao publicar vaga.",
+        );
     }
   };
 
@@ -170,7 +248,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           </button>
           <button
             className={`nav-item ${activeTab === "criar" ? "active" : ""}`}
-            onClick={() => setActiveTab("criar")}
+            onClick={novaVaga}
           >
             Publicar Nova Vaga
           </button>
@@ -180,6 +258,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
           >
             Meu Perfil
           </button>
+          <Notificacoes />
         </nav>
 
         <div className="sidebar-footer">
@@ -226,7 +305,7 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         gap: "12px",
                       }}
                     >
-                      {}
+                      <AcessibilidadeTags recursos={job.accessibilities} />
                       <span
                         style={{
                           fontSize: "14px",
@@ -253,6 +332,22 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                           onClick={() => verCandidatos(job.id, job.title)}
                         >
                           Ver Candidatos
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{
+                            flex: 1,
+                            marginTop: 0,
+                            padding: "8px",
+                            fontSize: "13px",
+                            whiteSpace: "nowrap",
+                          }}
+                          onClick={() => editarVaga(job)}
+                          aria-label={`Editar a vaga ${job.title}`}
+                        >
+                          Editar
                         </button>
 
                         {job.status === "active" && (
@@ -284,8 +379,8 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
         {}
         {activeTab === "criar" && (
           <div className="perfil-page" style={{ textAlign: "left" }}>
-            <h1>Publicar Nova Vaga</h1>
-            <form onSubmit={handleCriarVaga} className="perfil-card">
+            <h1>{editandoId ? "Editar Vaga" : "Publicar Nova Vaga"}</h1>
+            <form onSubmit={handleSalvarVaga} className="perfil-card">
               <div className="field">
                 <label htmlFor="vaga-titulo">Título</label>
                 <input
@@ -350,13 +445,64 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                   </select>
                 </div>
               </div>
+
+              {}
+              <fieldset className="acess-fieldset">
+                <legend>
+                  Recursos de acessibilidade para candidatos surdos
+                </legend>
+                {RECURSOS_ACESSIBILIDADE.map((recurso) => {
+                  const id = `recurso-${recurso.replace(/\W+/g, "-")}`;
+                  const marcado = Boolean(recursos[recurso]);
+                  return (
+                    <div key={recurso} className="acess-opcao">
+                      <input
+                        id={id}
+                        type="checkbox"
+                        checked={marcado}
+                        onChange={() => alternarRecurso(recurso)}
+                      />
+                      <label htmlFor={id}>{recurso}</label>
+                      {marcado && (
+                        <select
+                          aria-label={`Situação de ${recurso}`}
+                          value={recursos[recurso]}
+                          onChange={(e) =>
+                            setRecursos((atual) => ({
+                              ...atual,
+                              [recurso]: e.target.value as StatusRecurso,
+                            }))
+                          }
+                        >
+                          <option value="available">Disponível</option>
+                          <option value="in_progress">Em implantação</option>
+                        </select>
+                      )}
+                    </div>
+                  );
+                })}
+              </fieldset>
+
               <button
                 type="submit"
                 className="save-btn"
                 style={{ marginTop: "20px" }}
               >
-                Publicar Vaga
+                {editandoId ? "Salvar alterações" : "Publicar Vaga"}
               </button>
+              {editandoId && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ marginTop: "10px" }}
+                  onClick={() => {
+                    limparFormulario();
+                    setActiveTab("vagas");
+                  }}
+                >
+                  Cancelar edição
+                </button>
+              )}
             </form>
           </div>
         )}
@@ -399,6 +545,48 @@ function PainelEmpresa({ onLogout }: PainelEmpresaProps) {
                         {candidate.candidate.communicationPreference ||
                           "Não informada"}
                       </p>
+
+                      {}
+                      {candidate.candidate.candidateProfile && (
+                        <div className="perfil-candidato">
+                          {candidate.candidate.candidateProfile.bio && (
+                            <p>{candidate.candidate.candidateProfile.bio}</p>
+                          )}
+                          {candidate.candidate.candidateProfile.skills && (
+                            <p>
+                              <span className="rotulo">Habilidades:</span>{" "}
+                              {candidate.candidate.candidateProfile.skills}
+                            </p>
+                          )}
+                          {candidate.candidate.candidateProfile.experience && (
+                            <p>
+                              <span className="rotulo">Experiência:</span>{" "}
+                              {candidate.candidate.candidateProfile.experience}
+                            </p>
+                          )}
+                          {candidate.candidate.candidateProfile.education && (
+                            <p>
+                              <span className="rotulo">Formação:</span>{" "}
+                              {candidate.candidate.candidateProfile.education}
+                            </p>
+                          )}
+                          {linkSeguro(
+                            candidate.candidate.candidateProfile.videoUrl,
+                          ) && (
+                            <a
+                              href={
+                                linkSeguro(
+                                  candidate.candidate.candidateProfile.videoUrl,
+                                )!
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              ▶ Vídeo de apresentação em Libras
+                            </a>
+                          )}
+                        </div>
+                      )}
 
                       {}
                       {candidate.requiresInterpreter && (

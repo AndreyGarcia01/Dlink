@@ -5,7 +5,7 @@ import App from "../App";
 import { api } from "../services/api";
 
 vi.mock("../services/api", () => ({
-  api: { post: vi.fn(), get: vi.fn(), put: vi.fn() },
+  api: { post: vi.fn(), get: vi.fn(), put: vi.fn(), patch: vi.fn() },
   SESSAO_EXPIRADA: "dlink:sessao-expirada",
 }));
 
@@ -25,15 +25,49 @@ function logarComo(role: "candidate" | "company") {
 }
 
 describe("App", () => {
-  it("abre no login quando não tem ninguém logado", () => {
+  it("abre na área pública quando não tem ninguém logado", async () => {
     render(<App />);
 
-    expect(screen.getByRole("button", { name: "Entrar" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Vagas inclusivas/ }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("Nenhuma vaga aberta no momento"),
+    ).toBeInTheDocument();
+  });
+
+  it("da área pública vai para o login e volta", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /Ver vagas sem cadastro/ }),
+    );
+    expect(
+      screen.getByRole("heading", { name: /Vagas inclusivas/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("ao sair volta para a área pública", async () => {
+    logarComo("candidate");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Sair" }));
+
+    expect(
+      screen.getByRole("heading", { name: /Vagas inclusivas/ }),
+    ).toBeInTheDocument();
+    expect(localStorage.getItem("@DLink:token")).toBeNull();
   });
 
   it("vai do login para a tela de criar conta e volta", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     await user.click(
       screen.getByRole("button", { name: "Criar conta gratuita" }),
@@ -71,6 +105,7 @@ describe("App", () => {
     });
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     await user.type(screen.getByLabelText("E-mail"), "rh@lojax.com");
     await user.type(screen.getByLabelText("Senha"), "123456");
@@ -92,6 +127,7 @@ describe("App", () => {
     });
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     await user.type(screen.getByLabelText("E-mail"), "maria@email.com");
     await user.type(screen.getByLabelText("Senha"), "123456");

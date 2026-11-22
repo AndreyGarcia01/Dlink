@@ -26,7 +26,7 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
 
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
-      include: { job: { select: { companyId: true } } },
+      include: { job: { select: { companyId: true, title: true } } },
     });
     if (!application) {
       return res.status(404).json({ error: "Candidatura não encontrada." });
@@ -37,10 +37,22 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
         .json({ error: "Você só pode avaliar candidaturas das suas vagas." });
     }
 
-    const updatedApplication = await prisma.application.update({
-      where: { id: applicationId },
-      data: { status },
-    });
+    const resultado =
+      status === "approved" ? "foi aprovada" : "não foi aprovada";
+
+    const [updatedApplication] = await prisma.$transaction([
+      prisma.application.update({
+        where: { id: applicationId },
+        data: { status },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: application.candidateId,
+          referenceId: application.jobId,
+          message: `Sua candidatura para a vaga "${application.job.title}" ${resultado}.`,
+        },
+      }),
+    ]);
 
     registrarEvento(`candidatura_${status}`);
     return res.json({

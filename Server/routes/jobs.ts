@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import prisma from "../lib/prisma";
 import { registrarEvento } from "../lib/metricas";
+import { lerDadosDaVaga } from "../lib/vagas";
 import {
   ensureAuthenticated,
   AuthRequest,
@@ -47,32 +48,20 @@ router.post(
           .json({ error: "Apenas empresas podem publicar vagas." });
       }
 
-      const {
-        title,
-        description,
-        requirements,
-        location,
-        workRegion,
-        category,
-      } = req.body;
-
-      if (!title || !description || !requirements || !location || !workRegion) {
-        return res
-          .status(400)
-          .json({ error: "Preencha todos os campos obrigatórios." });
+      const lido = lerDadosDaVaga(req.body);
+      if ("erro" in lido) {
+        return res.status(400).json({ error: lido.erro });
       }
 
       const job = await prisma.job.create({
         data: {
           companyId: req.user.id,
-          title,
-          description,
-          requirements,
-          location,
-          workRegion,
-          category: category || "Geral",
+          ...lido.dados,
           status: "active",
+
+          accessibilities: { create: lido.recursos },
         },
+        include: { accessibilities: true },
       });
 
       registrarEvento("vaga_publicada");
@@ -82,6 +71,54 @@ router.post(
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: "Erro ao criar vaga." });
+    }
+  },
+);
+
+router.put(
+  "/:id",
+  ensureAuthenticated,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (req.user?.role !== "company") {
+        return res
+          .status(403)
+          .json({ error: "Apenas empresas podem editar vagas." });
+      }
+      const jobId = String(req.params.id);
+
+      const job = await prisma.job.findUnique({ where: { id: jobId } });
+      if (!job) {
+        return res.status(404).json({ error: "Vaga não encontrada." });
+      }
+      if (job.companyId !== req.user.id) {
+        return res
+          .status(403)
+          .json({ error: "Você não tem permissão para editar esta vaga." });
+      }
+
+      const lido = lerDadosDaVaga(req.body);
+      if ("erro" in lido) {
+        return res.status(400).json({ error: lido.erro });
+      }
+
+      const updatedJob = await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          ...lido.dados,
+          accessibilities: { deleteMany: {}, create: lido.recursos },
+        },
+        include: { accessibilities: true },
+      });
+
+      registrarEvento("vaga_editada");
+      return res.json({
+        message: "Vaga atualizada com sucesso!",
+        job: updatedJob,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Erro ao editar vaga." });
     }
   },
 );
@@ -102,6 +139,21 @@ router.post(
           .json({ error: "Apenas candidatos podem se candidatar." });
       }
 
+      const job = await prisma.job.findUnique({
+        where: { id: jobId },
+        select: { id: true, title: true, companyId: true, status: true },
+      });
+      if (!job) {
+        return res.status(404).json({ error: "Vaga não encontrada." });
+      }
+      if (job.status !== "active") {
+        return res
+          .status(400)
+          .json({
+            error: "Esta vaga foi encerrada e não recebe mais candidaturas.",
+          });
+      }
+
       const existingApplication = await prisma.application.findUnique({
         where: { candidateId_jobId: { candidateId: candidateId, jobId } },
       });
@@ -112,17 +164,35 @@ router.post(
           .json({ error: "Você já se candidatou a esta vaga." });
       }
 
-      const application = await prisma.application.create({
-        data: {
-          candidateId: candidateId,
-          jobId: jobId,
-          requiresInterpreter: requiresInterpreter || false,
-          status: "pending",
-        },
+      const candidato = await prisma.user.findUnique({
+        where: { id: candidateId },
+        select: { name: true },
       });
+      const precisaInterprete = requiresInterpreter === true;
+      const mensagem =
+        `Nova candidatura de ${candidato?.name ?? "um candidato"} para a vaga "${job.title}"` +
+        (precisaInterprete ? " — precisa de intérprete de Libras." : ".");
+
+      const [application] = await prisma.$transaction([
+        prisma.application.create({
+          data: {
+            candidateId: candidateId,
+            jobId: jobId,
+            requiresInterpreter: precisaInterprete,
+            status: "pending",
+          },
+        }),
+        prisma.notification.create({
+          data: {
+            userId: job.companyId,
+            referenceId: job.id,
+            message: mensagem,
+          },
+        }),
+      ]);
 
       registrarEvento(
-        requiresInterpreter ? "candidatura_com_interprete" : "candidatura",
+        precisaInterprete ? "candidatura_com_interprete" : "candidatura",
       );
       return res
         .status(201)
@@ -148,6 +218,7 @@ router.get(
       const jobs = await prisma.job.findMany({
         where: { companyId: req.user.id },
         include: {
+          accessibilities: true,
           _count: {
             select: { applications: true },
           },
