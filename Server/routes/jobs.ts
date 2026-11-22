@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import prisma from "../lib/prisma";
+import { registrarEvento } from "../lib/metricas";
 import {
   ensureAuthenticated,
   AuthRequest,
@@ -74,6 +75,7 @@ router.post(
         },
       });
 
+      registrarEvento("vaga_publicada");
       return res
         .status(201)
         .json({ message: "Vaga publicada com sucesso!", job });
@@ -119,6 +121,9 @@ router.post(
         },
       });
 
+      registrarEvento(
+        requiresInterpreter ? "candidatura_com_interprete" : "candidatura",
+      );
       return res
         .status(201)
         .json({ message: "Candidatura realizada com sucesso!", application });
@@ -170,6 +175,7 @@ router.get(
       }
       const jobId = String(req.params.id);
 
+      // RN07: a empresa só vê candidatos das próprias vagas.
       const job = await prisma.job.findUnique({ where: { id: jobId } });
       if (!job) {
         return res.status(404).json({ error: "Vaga não encontrada." });
@@ -180,6 +186,7 @@ router.get(
           .json({ error: "Você só pode ver candidatos das suas vagas." });
       }
 
+      // "select" escolhe os campos do candidato: o passwordHash fica de fora.
       const applications = await prisma.application.findMany({
         where: { jobId: jobId },
         include: {
@@ -234,6 +241,7 @@ router.patch(
         data: { status: "closed" },
       });
 
+      registrarEvento("vaga_encerrada");
       return res.json({
         message: "Vaga encerrada com sucesso!",
         job: updatedJob,

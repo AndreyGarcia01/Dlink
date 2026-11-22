@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import prisma from "../lib/prisma";
+import { registrarEvento } from "../lib/metricas";
 import {
   ensureAuthenticated,
   AuthRequest,
@@ -23,6 +24,7 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "Status inválido." });
     }
 
+    // RN10: só a empresa dona da vaga muda o status da candidatura.
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: { job: { select: { companyId: true } } },
@@ -41,6 +43,7 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
       data: { status },
     });
 
+    registrarEvento(`candidatura_${status}`);
     return res.json({
       message: "Status atualizado!",
       application: updatedApplication,
