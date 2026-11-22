@@ -78,7 +78,7 @@ jobs:
           jq -n --arg script "$script" --arg sha "$SHA" '{
             executionTimeout: ["1200"],
             commands: [
-              "set -euo pipefail",
+              "set -eu",
               "echo \($script) | base64 -d > /tmp/dlink-deploy.sh",
               "chmod 644 /tmp/dlink-deploy.sh",
               "sudo -iu ubuntu bash /tmp/dlink-deploy.sh \($sha)"
