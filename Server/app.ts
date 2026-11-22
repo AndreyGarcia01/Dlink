@@ -3,6 +3,8 @@ import authRoutes from "./routes/auth";
 import profileRoutes from "./routes/profile";
 import jobsRoutes from "./routes/jobs";
 import applicationRoutes from "./routes/applications";
+import notificationRoutes from "./routes/notifications";
+import publicRoutes from "./routes/public";
 import { medirRequisicoes, exporMetricas } from "./lib/metricas";
 
 const app = express();
@@ -22,5 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/jobs", jobsRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/public", publicRoutes);
 
 export default app;

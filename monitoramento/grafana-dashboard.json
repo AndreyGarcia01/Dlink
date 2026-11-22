@@ -20,7 +20,7 @@
     "to": "now"
   },
   "schemaVersion": 39,
-  "version": 2,
+  "version": 1,
   "panels": [
     {
       "id": 1,
@@ -44,7 +44,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A",
-          "expr": "sum(rate(dlink_http_request_duration_seconds_count{route!=\"/metrics\"}[5m])) * 60",
+          "expr": "sum(rate(dlink_http_request_duration_seconds_count[5m])) * 60",
           "legendFormat": "total"
         }
       ],
@@ -78,14 +78,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A",
-          "expr": "100 * (sum(rate(dlink_http_request_duration_seconds_count{status=~\"5..\",route!=\"/metrics\"}[5m])) or vector(0)) / clamp_min(sum(rate(dlink_http_request_duration_seconds_count{route!=\"/metrics\"}[5m])), 1e-9)",
+          "expr": "100 * sum(rate(dlink_http_request_duration_seconds_count{status=~\"5..\"}[5m])) / clamp_min(sum(rate(dlink_http_request_duration_seconds_count[5m])), 1e-9)",
           "legendFormat": "% de erros"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "noValue": "0%"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -113,7 +112,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(dlink_http_request_duration_seconds_bucket{route!=\"/metrics\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(dlink_http_request_duration_seconds_bucket[5m])))",
           "legendFormat": "p95"
         }
       ],
@@ -147,7 +146,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A",
-          "expr": "sum by (route) (rate(dlink_http_request_duration_seconds_count{route!=\"/metrics\"}[5m])) * 60",
+          "expr": "sum by (route) (rate(dlink_http_request_duration_seconds_count[5m])) * 60",
           "legendFormat": "{{route}}"
         }
       ],
@@ -167,7 +166,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Cadastros, logins, vagas publicadas/editadas e candidaturas. Aparece depois do primeiro evento desde o último deploy.",
+      "description": "Cadastros, vagas publicadas, candidaturas e decisões das empresas",
       "gridPos": {
         "x": 12,
         "y": 8,
@@ -186,14 +185,10 @@
         }
       ],
       "fieldConfig": {
-        "defaults": {
-          "noValue": "Nenhum evento na última hora"
-        },
+        "defaults": {},
         "overrides": []
       },
-      "options": {
-        "noValue": "Nenhum evento na última hora"
-      }
+      "options": {}
     },
     {
       "id": 6,

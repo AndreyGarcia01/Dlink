@@ -3,11 +3,17 @@ import Login from "./componentes/Login";
 import CriarConta from "./componentes/CriarConta";
 import Dashboard from "./componentes/Dashboard";
 import PainelEmpresa from "./componentes/PainelEmpresa";
+import AreaPublica from "./componentes/AreaPublica";
 import ReactVLibras from "react-vlibras-plugin";
 import { SESSAO_EXPIRADA } from "./services/api";
 import "./App.css";
 
-type View = "login" | "signup" | "candidate_dashboard" | "company_dashboard";
+type View =
+  | "publico"
+  | "login"
+  | "signup"
+  | "candidate_dashboard"
+  | "company_dashboard";
 
 function lerUsuario() {
   const user = localStorage.getItem("@DLink:user");
@@ -24,7 +30,8 @@ function App() {
         ? "company_dashboard"
         : "candidate_dashboard";
     }
-    return "login";
+
+    return "publico";
   });
 
   const [userName, setUserName] = useState(() => lerUsuario()?.name ?? "");
@@ -73,7 +80,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.clear();
-    setView("login");
+    setView("publico");
   };
 
   const renderView = () => {
@@ -86,11 +93,21 @@ function App() {
       );
     }
 
+    if (view === "publico") {
+      return (
+        <AreaPublica
+          onLogin={() => setView("login")}
+          onCreateAccount={() => setView("signup")}
+        />
+      );
+    }
+
     if (view === "login") {
       return (
         <Login
           onLogin={handleLogin}
           onCreateAccount={() => setView("signup")}
+          onBack={() => setView("publico")}
         />
       );
     }

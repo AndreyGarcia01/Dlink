@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import Perfil from "./Perfil";
 import SearchBar from "./SearchBar";
+import AcessibilidadeTags from "./AcessibilidadeTags";
+import Direitos from "./Direitos";
+import Notificacoes from "./Notificacoes";
+import {
+  RECURSOS_ACESSIBILIDADE,
+  type RecursoAcessibilidade,
+} from "../constantes/acessibilidade";
 import axios from "axios";
 
 interface DashboardProps {
@@ -16,10 +23,12 @@ interface Job {
   id: string;
   title: string;
   description: string;
+  requirements?: string;
   location: string;
   workRegion: string;
   category: string;
   company: { name: string };
+  accessibilities?: RecursoAcessibilidade[];
   applications?: { id: string }[];
 }
 
@@ -46,7 +55,7 @@ function Dashboard({
 }: DashboardProps) {
   const initial = userName.charAt(0).toUpperCase();
   const [activeTab, setActiveTab] = useState<
-    "inicio" | "candidaturas" | "perfil"
+    "inicio" | "candidaturas" | "direitos" | "perfil"
   >("inicio");
 
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -60,6 +69,7 @@ function Dashboard({
   const [filtroLocal, setFiltroLocal] = useState("");
   const [filtroArea, setFiltroArea] = useState("");
   const [filtroRegime, setFiltroRegime] = useState("");
+  const [filtroAcessibilidade, setFiltroAcessibilidade] = useState("");
 
   const termo = busca.trim().toLowerCase();
   const vagasFiltradas = jobs.filter(
@@ -71,15 +81,23 @@ function Dashboard({
           .includes(termo)) &&
       (!filtroLocal || job.location === filtroLocal) &&
       (!filtroArea || job.category === filtroArea) &&
-      (!filtroRegime || job.workRegion === filtroRegime),
+      (!filtroRegime || job.workRegion === filtroRegime) &&
+      (!filtroAcessibilidade ||
+        (job.accessibilities ?? []).some(
+          (r) =>
+            r.resource === filtroAcessibilidade && r.status === "available",
+        )),
   );
-  const temFiltro = Boolean(termo || filtroLocal || filtroArea || filtroRegime);
+  const temFiltro = Boolean(
+    termo || filtroLocal || filtroArea || filtroRegime || filtroAcessibilidade,
+  );
 
   function limparFiltros() {
     setBusca("");
     setFiltroLocal("");
     setFiltroArea("");
     setFiltroRegime("");
+    setFiltroAcessibilidade("");
   }
 
   useEffect(() => {
@@ -163,6 +181,14 @@ function Dashboard({
           >
             Meu Perfil
           </button>
+          <button
+            type="button"
+            className={`nav-item ${activeTab === "direitos" ? "active" : ""}`}
+            onClick={() => setActiveTab("direitos")}
+          >
+            Meus Direitos
+          </button>
+          <Notificacoes />
         </nav>
         <div className="sidebar-footer">
           <div className="sidebar-user">
@@ -234,6 +260,19 @@ function Dashboard({
                     ))}
                   </select>
                 </div>
+                <div className="field">
+                  <label htmlFor="filtro-acessibilidade">Acessibilidade</label>
+                  <select
+                    id="filtro-acessibilidade"
+                    value={filtroAcessibilidade}
+                    onChange={(e) => setFiltroAcessibilidade(e.target.value)}
+                  >
+                    <option value="">Qualquer</option>
+                    {RECURSOS_ACESSIBILIDADE.map((r) => (
+                      <option key={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
 
@@ -275,6 +314,13 @@ function Dashboard({
                         <p className="job-company">{job.company.name}</p>
                       </div>
                       <p className="job-description">{job.description}</p>
+                      {job.requirements && (
+                        <p className="job-requirements">
+                          <span className="rotulo">Requisitos:</span>{" "}
+                          {job.requirements}
+                        </p>
+                      )}
+                      <AcessibilidadeTags recursos={job.accessibilities} />
                       <div className="job-footer">
                         <span>📍 {job.location}</span>
                         <span>💼 {job.workRegion}</span>
@@ -364,6 +410,8 @@ function Dashboard({
         )}
 
         {activeTab === "perfil" && <Perfil onUpdateName={onUpdateName} />}
+
+        {activeTab === "direitos" && <Direitos />}
       </main>
     </div>
   );

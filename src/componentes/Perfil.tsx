@@ -1,17 +1,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import axios from "axios";
 import { api } from "../services/api";
-
-function linkSeguro(endereco: string) {
-  try {
-    const url = new URL(endereco);
-    return url.protocol === "https:" || url.protocol === "http:"
-      ? url.href
-      : null;
-  } catch {
-    return null;
-  }
-}
+import { linkSeguro } from "../utils/linkSeguro";
 
 interface PerfilProps {
   onUpdateName?: (name: string) => void;
@@ -25,7 +15,6 @@ function Perfil({ onUpdateName }: PerfilProps) {
   const [experiencia, setExperiencia] = useState("");
   const [formacao, setFormacao] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
-
   const [videoSalvo, setVideoSalvo] = useState("");
   const [novaHabilidade, setNovaHabilidade] = useState("");
   const [habilidades, setHabilidades] = useState<string[]>([]);

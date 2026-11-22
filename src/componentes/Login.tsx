@@ -5,9 +5,10 @@ import { api } from "../services/api";
 interface LoginProps {
   onLogin: (email: string, role: string) => void;
   onCreateAccount: () => void;
+  onBack?: () => void;
 }
 
-function Login({ onLogin, onCreateAccount }: LoginProps) {
+function Login({ onLogin, onCreateAccount, onBack }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState(false);
@@ -144,6 +145,12 @@ function Login({ onLogin, onCreateAccount }: LoginProps) {
         >
           Criar conta gratuita
         </button>
+
+        {onBack && (
+          <button type="button" className="btn-link" onClick={onBack}>
+            ← Ver vagas sem cadastro
+          </button>
+        )}
       </div>
     </div>
   );
