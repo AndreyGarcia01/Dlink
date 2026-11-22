@@ -10,9 +10,7 @@
   ],
   "title": "D-Link — API",
   "uid": "dlink-api",
-  "tags": [
-    "dlink"
-  ],
+  "tags": ["dlink"],
   "timezone": "America/Sao_Paulo",
   "refresh": "1m",
   "time": {

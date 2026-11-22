@@ -24,7 +24,6 @@ router.put("/:id/status", async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "Status inválido." });
     }
 
-    // RN10: só a empresa dona da vaga muda o status da candidatura.
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: { job: { select: { companyId: true } } },

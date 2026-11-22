@@ -24,7 +24,9 @@ describe("GET /metrics (observabilidade)", () => {
   it("mede as requisições pela rota, sem o id na URL", async () => {
     prismaMock.job.findUnique.mockResolvedValue(null);
     await request(app).get("/api/health");
-    await request(app).patch("/api/jobs/abc-123/close").set(authHeader("company"));
+    await request(app)
+      .patch("/api/jobs/abc-123/close")
+      .set(authHeader("company"));
 
     const res = await request(app).get("/metrics");
 
@@ -45,19 +47,18 @@ describe("GET /metrics (observabilidade)", () => {
 
   it("conta eventos de negócio (ex.: vaga publicada)", async () => {
     prismaMock.job.create.mockResolvedValue({ id: "j1" });
-    await request(app)
-      .post("/api/jobs")
-      .set(authHeader("company"))
-      .send({
-        title: "Dev",
-        description: "x",
-        requirements: "x",
-        location: "Joinville",
-        workRegion: "Remoto",
-      });
+    await request(app).post("/api/jobs").set(authHeader("company")).send({
+      title: "Dev",
+      description: "x",
+      requirements: "x",
+      location: "Joinville",
+      workRegion: "Remoto",
+    });
 
     const res = await request(app).get("/metrics");
 
-    expect(res.text).toMatch(/dlink_eventos_negocio_total\{evento="vaga_publicada"\} [1-9]/);
+    expect(res.text).toMatch(
+      /dlink_eventos_negocio_total\{evento="vaga_publicada"\} [1-9]/,
+    );
   });
 });
