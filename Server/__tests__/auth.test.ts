@@ -69,7 +69,7 @@ describe("POST /api/auth/register", () => {
     expect(await bcrypt.compare("123456", data.passwordHash)).toBe(true);
     expect(data.hearingLossLevel).toBe("Profundo");
     expect(data.cnpj).toBeNull();
-    // a senha nunca volta para o front-end
+
     expect(res.body.user.passwordHash).toBeUndefined();
   });
 

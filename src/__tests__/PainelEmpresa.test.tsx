@@ -62,7 +62,9 @@ describe("Painel da empresa", () => {
   it("lista as vagas da empresa com o número de candidatos", async () => {
     renderPainel();
 
-    expect(await screen.findByText("Auxiliar Administrativo")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Auxiliar Administrativo"),
+    ).toBeInTheDocument();
     expect(screen.getByText(/1 candidato\(s\)/)).toBeInTheDocument();
     expect(screen.getByText("Ativa")).toBeInTheDocument();
   });
@@ -72,13 +74,18 @@ describe("Painel da empresa", () => {
     const { user } = renderPainel();
     await screen.findByText("Auxiliar Administrativo");
 
-    await user.click(screen.getByRole("button", { name: "Publicar Nova Vaga" }));
+    await user.click(
+      screen.getByRole("button", { name: "Publicar Nova Vaga" }),
+    );
     await user.type(screen.getByLabelText("Título"), "Dev Front-end");
     await user.type(screen.getByLabelText("Descrição"), "Vaga remota");
     await user.type(screen.getByLabelText("Requisitos"), "React");
     await user.type(screen.getByLabelText("Localidade"), "Joinville");
     await user.selectOptions(screen.getByLabelText("Regime"), "Remoto");
-    await user.selectOptions(screen.getByLabelText("Área de atuação"), "Tecnologia");
+    await user.selectOptions(
+      screen.getByLabelText("Área de atuação"),
+      "Tecnologia",
+    );
     await user.click(screen.getByRole("button", { name: "Publicar Vaga" }));
 
     expect(post).toHaveBeenCalledWith("/jobs", {
@@ -90,8 +97,10 @@ describe("Painel da empresa", () => {
       category: "Tecnologia",
       accessibilities: [],
     });
-    // volta para a lista de vagas depois de publicar
-    expect(await screen.findByRole("heading", { name: "Minhas Vagas" })).toBeInTheDocument();
+
+    expect(
+      await screen.findByRole("heading", { name: "Minhas Vagas" }),
+    ).toBeInTheDocument();
   });
 
   it("avisa quando a API recusa a vaga", async () => {
@@ -99,7 +108,9 @@ describe("Painel da empresa", () => {
     const { user } = renderPainel();
     await screen.findByText("Auxiliar Administrativo");
 
-    await user.click(screen.getByRole("button", { name: "Publicar Nova Vaga" }));
+    await user.click(
+      screen.getByRole("button", { name: "Publicar Nova Vaga" }),
+    );
     await user.type(screen.getByLabelText("Título"), "Dev");
     await user.type(screen.getByLabelText("Descrição"), "x");
     await user.type(screen.getByLabelText("Requisitos"), "x");
@@ -117,8 +128,10 @@ describe("Painel da empresa", () => {
     await user.click(screen.getByRole("button", { name: "Ver Candidatos" }));
 
     expect(await screen.findByText("Carlos Henrique")).toBeInTheDocument();
-    expect(screen.getByText(/Necessita de intérprete de Libras/)).toBeInTheDocument();
-    // RF09: a empresa vê o perfil profissional e o vídeo em Libras
+    expect(
+      screen.getByText(/Necessita de intérprete de Libras/),
+    ).toBeInTheDocument();
+
     expect(screen.getByText("3 anos em linha de montagem")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Vídeo de apresentação em Libras/ }),
@@ -126,7 +139,9 @@ describe("Painel da empresa", () => {
     expect(get).toHaveBeenCalledWith("/jobs/j1/candidates");
 
     await user.click(screen.getByRole("button", { name: "Aprovar" }));
-    expect(put).toHaveBeenCalledWith("/applications/a1/status", { status: "approved" });
+    expect(put).toHaveBeenCalledWith("/applications/a1/status", {
+      status: "approved",
+    });
   });
 
   it("encerra uma vaga depois da confirmação (RN08)", async () => {
@@ -165,7 +180,9 @@ describe("Painel da empresa", () => {
     const { user } = renderPainel();
     await screen.findByText("Auxiliar Administrativo");
 
-    await user.click(screen.getByRole("button", { name: "Publicar Nova Vaga" }));
+    await user.click(
+      screen.getByRole("button", { name: "Publicar Nova Vaga" }),
+    );
     await user.type(screen.getByLabelText("Título"), "Dev");
     await user.type(screen.getByLabelText("Descrição"), "x");
     await user.type(screen.getByLabelText("Requisitos"), "x");
@@ -176,12 +193,14 @@ describe("Painel da empresa", () => {
       screen.getByLabelText("Situação de Sinalização visual"),
       "in_progress",
     );
-    // marcar e desmarcar não envia o recurso
+
     await user.click(screen.getByLabelText("Vídeos com legenda"));
     await user.click(screen.getByLabelText("Vídeos com legenda"));
     await user.click(screen.getByRole("button", { name: "Publicar Vaga" }));
 
-    expect((post.mock.calls[0][1] as { accessibilities: unknown }).accessibilities).toEqual([
+    expect(
+      (post.mock.calls[0][1] as { accessibilities: unknown }).accessibilities,
+    ).toEqual([
       { resource: "Intérprete de Libras", status: "available" },
       { resource: "Sinalização visual", status: "in_progress" },
     ]);
@@ -192,15 +211,22 @@ describe("Painel da empresa", () => {
     const { user } = renderPainel();
     await screen.findByText("Auxiliar Administrativo");
 
-    // o card mostra os recursos de acessibilidade da vaga
     expect(screen.getByText(/Intérprete de Libras/)).toBeInTheDocument();
 
     await user.click(
-      screen.getByRole("button", { name: "Editar a vaga Auxiliar Administrativo" }),
+      screen.getByRole("button", {
+        name: "Editar a vaga Auxiliar Administrativo",
+      }),
     );
-    expect(screen.getByRole("heading", { name: "Editar Vaga" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Título")).toHaveValue("Auxiliar Administrativo");
-    expect(screen.getByLabelText("Área de atuação")).toHaveValue("Administração");
+    expect(
+      screen.getByRole("heading", { name: "Editar Vaga" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Título")).toHaveValue(
+      "Auxiliar Administrativo",
+    );
+    expect(screen.getByLabelText("Área de atuação")).toHaveValue(
+      "Administração",
+    );
     expect(screen.getByLabelText("Intérprete de Libras")).toBeChecked();
 
     const titulo = screen.getByLabelText("Título");
@@ -212,7 +238,9 @@ describe("Painel da empresa", () => {
       "/jobs/j1",
       expect.objectContaining({
         title: "Assistente Administrativo",
-        accessibilities: [{ resource: "Intérprete de Libras", status: "available" }],
+        accessibilities: [
+          { resource: "Intérprete de Libras", status: "available" },
+        ],
       }),
     );
     expect(window.alert).toHaveBeenCalledWith("Vaga atualizada com sucesso!");
@@ -223,11 +251,15 @@ describe("Painel da empresa", () => {
     await screen.findByText("Auxiliar Administrativo");
 
     await user.click(
-      screen.getByRole("button", { name: "Editar a vaga Auxiliar Administrativo" }),
+      screen.getByRole("button", {
+        name: "Editar a vaga Auxiliar Administrativo",
+      }),
     );
     await user.click(screen.getByRole("button", { name: "Cancelar edição" }));
 
     expect(put).not.toHaveBeenCalled();
-    expect(await screen.findByRole("heading", { name: "Minhas Vagas" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Minhas Vagas" }),
+    ).toBeInTheDocument();
   });
 });
