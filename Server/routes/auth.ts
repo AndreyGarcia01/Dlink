@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import { registrarEvento } from "../lib/metricas";
+import { verificarEmail } from "../lib/email";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -37,6 +38,17 @@ router.post("/register", async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ error: "A senha deve ter no mínimo 6 caracteres." });
+    }
+
+    const situacaoEmail = await verificarEmail(String(email));
+    if (situacaoEmail === "formato") {
+      return res.status(400).json({ error: "Informe um e-mail válido." });
+    }
+    if (situacaoEmail === "dominio") {
+      return res.status(400).json({
+        error:
+          "O domínio deste e-mail não existe ou não recebe e-mails. Confira se digitou certo.",
+      });
     }
 
     const userExists = await prisma.user.findUnique({ where: { email } });
