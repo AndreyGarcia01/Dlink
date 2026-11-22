@@ -8,11 +8,15 @@ vi.mock("../lib/prisma", async () => ({
   default: (await import("./helpers")).prismaMock,
 }));
 
+vi.mock("../lib/email", () => ({ verificarEmail: vi.fn() }));
+
 import app from "../app";
+import { verificarEmail } from "../lib/email";
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.mocked(verificarEmail).mockResolvedValue("ok");
 });
 
 describe("POST /api/auth/register", () => {
@@ -42,6 +46,31 @@ describe("POST /api/auth/register", () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/6 caracteres/);
+  });
+
+  it("recusa e-mail com formato inválido", async () => {
+    vi.mocked(verificarEmail).mockResolvedValue("formato");
+
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({ ...candidato, email: "maria.email.com" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/e-mail válido/);
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+  });
+
+  it("recusa e-mail de domínio que não recebe e-mails", async () => {
+    vi.mocked(verificarEmail).mockResolvedValue("dominio");
+
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({ ...candidato, email: "maria@asdkjasd.com" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/domínio/);
+    expect(verificarEmail).toHaveBeenCalledWith("maria@asdkjasd.com");
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
   });
 
   it("não deixa cadastrar e-mail repetido", async () => {
