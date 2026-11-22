@@ -36,7 +36,7 @@ export async function dominioRecebeEmail(
     const codigo = (erro as NodeJS.ErrnoException).code ?? "";
     if (DOMINIO_SEM_EMAIL.has(codigo)) return false;
 
-    console.error(`Não foi possível consultar o DNS de ${dominio}:`, codigo);
+    console.error("Falha ao consultar o DNS do e-mail no cadastro:", codigo);
     return true;
   }
 }
